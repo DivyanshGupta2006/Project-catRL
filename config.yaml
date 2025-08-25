@@ -1,0 +1,4 @@
+# path related variables
+paths:
+  raw_data_directory: "../../data/raw_data/"
+  processed_data_directory: "../../data/processed_data/"
