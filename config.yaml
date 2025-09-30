@@ -1,4 +1,13 @@
 # path related variables
 paths:
-  raw_data_directory: "../../data/raw_data/"
-  processed_data_directory: "../../data/processed_data/"
+  data_directory: "data\\"
+  report_directory: "reports\\"
+  model_directory: "models\\"
+  env_directory: ".env"
+  portfolio_directory: "portfolio.csv"
+  state_directory: "state.json"
+
+data:
+  tickers:
+    - 'ETH/USDT'
+    - 'BTC/USDT'
