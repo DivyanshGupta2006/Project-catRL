@@ -1,7 +1,10 @@
 data/
 models/
+reports/
 .venv/
 .idea/
 __pycache__/
 *.pyc
 .env
+/portfolio.csv
+/state.json
