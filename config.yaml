@@ -1,13 +1,29 @@
 # path related variables
 paths:
-  data_directory: "data"
-  report_directory: "reports"
-  model_directory: "models"
+  raw_data_directory: "data/raw/"
+  processed_data_directory: "data/processed/"
+  featured_data_directory: "data/featured/"
+  train_data_directory: "data/training/"
+  val_data_directory: "data/validation/"
+  test_data_directory: "data/test/"
+  report_directory: "reports/"
+  model_directory: "models/"
   env_directory: ".env"
   portfolio_directory: "portfolio.csv"
   state_directory: "state.json"
 
 data:
+  timeframe: '4h'
+  start_date: '2020-07-01'
+  end_date: '2025-06-31'
   tickers:
     - 'ETH/USDT'
     - 'BTC/USDT'
+    - 'BNB/USDT'
+    - 'SOL/USDT'
+    - 'ADA/USDT'
+    - 'AVAX/USDT'
+    - 'LINK/USDT'
+    - 'MATIC/USDT'
+    - 'LTC/USDT'
+    - 'UNI/USDT'
