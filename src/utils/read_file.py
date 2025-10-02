@@ -3,8 +3,9 @@ from src.utils import get_absolute_path, get_config
 
 config = get_config.read_yaml()
 
-def read_raw_data(file) -> pd.DataFrame:
+def read_raw_data(symbol) -> pd.DataFrame:
     dir = get_absolute_path.absolute(config['paths']['raw_data_directory'])
+    file = symbol.split('/')[0]
     print(f"Reading Raw Equity data: {file} !")
     try:
         data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])

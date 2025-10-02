@@ -1,5 +1,8 @@
 # Crypto Algorithmic Trading based on Reinforcement Learning
+Potential Improvements:
+ - Train, Validation, Test split.
 <br>
+
 Authors:
 <br>
 Divyansh Gupta
