@@ -1,4 +1,3 @@
-import datetime
 from src.utils import get_config, read_file, check_dir, get_absolute_path
 
 config = get_config.read_yaml()
@@ -13,12 +12,11 @@ def split():
     check_dir.check(train_data_dir)
     check_dir.check(test_data_dir)
     check_dir.check(val_data_dir)
-    one_day = datetime.timedelta(days=1)
     for symbol in symbols:
         df = read_file.read_raw_data(symbol)
-        df_train = df.loc[config['data']['start_date'] : config['data']['train_val_split']]
-        df_val = df.loc[config['data']['train_val_split'] + one_day : config['data']['val_test_split']]
-        df_test = df.loc[config['data']['val_test_split'] + one_day : config['data']['end_date']]
+        df_train = df[df.index < config['data']['train_val_split']]
+        df_val = df[(df.index >= config['data']['train_val_split']) & (df.index < config['data']['val_test_split'])]
+        df_test = df[df.index >= config['data']['val_test_split']]
         if symbol == 'ETH/USDT':
             print(f"Train set shape: {df_train.shape}")
             print(f"Validation set shape: {df_val.shape}")
