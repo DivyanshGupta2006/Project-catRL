@@ -1,8 +1,8 @@
 # path related variables
 paths:
-  data_directory: "data\\"
-  report_directory: "reports\\"
-  model_directory: "models\\"
+  data_directory: "data"
+  report_directory: "reports"
+  model_directory: "models"
   env_directory: ".env"
   portfolio_directory: "portfolio.csv"
   state_directory: "state.json"
