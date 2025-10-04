@@ -10,6 +10,7 @@ paths:
   featured_test_data_directory: "data/test/featured/"
   processed_val_data_directory: "data/validation/processed/"
   featured_val_data_directory: "data/validation/featured/"
+  preprocessor_directory: "model/preprocessor/"
   report_directory: "reports/"
   model_directory: "models/"
   env_directory: ".env"
@@ -20,6 +21,7 @@ data:
   timeframe: '4h'
   backdate: 200
   start_date: '2020-05-28' # taking 200 extra candles to account for null values encountered during feature engineering
+  begin_date: '2020-07-01'
   end_date: '2025-06-30'
   train_val_split: '2024-06-30'
   val_test_split: '2024-12-31'

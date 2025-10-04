@@ -1,3 +1,5 @@
+from sklearn.preprocessing import MinMaxScaler
+import joblib
 from src.utils import get_config, get_absolute_path, check_dir, read_file
 
 config = get_config.read_yaml()
@@ -8,7 +10,28 @@ def preprocess(type='training'):
     for symbol in symbols:
         if type == 'training':
             data = read_file.read_featured_training_data(symbol)
+            data_dir = get_absolute_path.absolute(config['paths']['processed_training_data_directory'])
         elif type == 'val':
             data = read_file.read_featured_val_data(symbol)
+            data_dir = get_absolute_path.absolute(config['paths']['processed_val_data_directory'])
         elif type == 'test':
             data = read_file.read_featured_test_data(symbol)
+            data_dir = get_absolute_path.absolute(config['paths']['processed_test_data_directory'])
+
+        # Handling NaN values
+        data = data[data.index >= config['data']['begin_date']].copy()
+        data = data.ffill()
+
+        # Scaling the data
+        if (type == 'training'):
+            scaler = MinMaxScaler()
+            scaler.fit(data)
+            joblib.dump(scaler, config['paths']['preprocessor_directory'] / f'{symbol}.joblib')
+        else:
+            scaler = joblib.load(config['paths']['preprocessor_directory'] / f'{symbol}.joblib')
+        data_scaled = scaler.transform(data)
+        symbol = symbol.split('/')[0]
+        path = f'{symbol}.csv'
+        data_scaled.to_csv(data_dir / path)
+
+
