@@ -6,9 +6,9 @@ def split():
 
     symbols = config['data']['symbols']
     print("Splitting the data...")
-    train_data_dir = get_absolute_path.absolute(config['paths']['train_data_directory'])
-    test_data_dir = get_absolute_path.absolute(config['paths']['test_data_directory'])
-    val_data_dir = get_absolute_path.absolute(config['paths']['val_data_directory'])
+    train_data_dir = get_absolute_path.absolute(config['paths']['raw_training_data_directory'])
+    test_data_dir = get_absolute_path.absolute(config['paths']['raw_test_data_directory'])
+    val_data_dir = get_absolute_path.absolute(config['paths']['raw_val_data_directory'])
     check_dir.check(train_data_dir)
     check_dir.check(test_data_dir)
     check_dir.check(val_data_dir)

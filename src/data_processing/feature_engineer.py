@@ -1,15 +1,22 @@
 import talib as ta
+import pandas as pd
 from src.utils import get_config, read_file, get_absolute_path, check_dir
 
 config = get_config.read_yaml()
 
-def create_features():
+def create_features(type = 'training'):
     print('Creating features...')
-    data_dir = get_absolute_path.absolute(config['paths']['featured_data_directory'])
+    data_dir = get_absolute_path.absolute(config['paths'][f'featured_{type}_data_directory'])
     check_dir.check(data_dir)
     symbols = config['data']['symbols']
     for symbol in symbols:
-        data = read_file.read_training_data(symbol)
+        data = pd.DataFrame()
+        if type == 'training':
+            data = read_file.read_raw_training_data(symbol)
+        elif type == 'val':
+            data = read_file.read_raw_val_data(symbol)
+        elif type == 'test':
+            data = read_file.read_raw_test_data(symbol)
         data['rsi'] = ta.RSI(data['close'], timeperiod=14)
         data['sma-50'] = ta.SMA(data['close'], timeperiod=50)
         data['sma-100'] = ta.SMA(data['close'], timeperiod=100)
