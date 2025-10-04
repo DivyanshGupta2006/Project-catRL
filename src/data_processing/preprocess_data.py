@@ -22,16 +22,18 @@ def preprocess(type='training'):
     for symbol in symbols:
         if type == 'training':
             data = read_file.read_featured_training_data(symbol)
+            data = data[data.index >= config['data']['begin_train_date']].copy()
             data_dir = get_absolute_path.absolute(config['paths']['processed_training_data_directory'])
         elif type == 'val':
             data = read_file.read_featured_val_data(symbol)
+            data = data[data.index >= config['data']['begin_val_date']].copy()
             data_dir = get_absolute_path.absolute(config['paths']['processed_val_data_directory'])
         elif type == 'test':
             data = read_file.read_featured_test_data(symbol)
+            data = data[data.index >= config['data']['begin_test_date']].copy()
             data_dir = get_absolute_path.absolute(config['paths']['processed_test_data_directory'])
 
         # Handling NaN values
-        data = data[data.index >= config['data']['begin_date']].copy()
         data = data.ffill()
 
         # Scaling the data
