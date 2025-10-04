@@ -18,7 +18,7 @@ def read_raw_data(symbol) -> pd.DataFrame:
 def read_raw_training_data(symbol) -> pd.DataFrame:
     dir = get_absolute_path.absolute(config['paths']['raw_training_data_directory'])
     file = symbol.split('/')[0]
-    print(f"Reading Training data: {file} !")
+    print(f"Reading Raw Training data: {file} !")
     try:
         data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
         print(f"Successfully read: {file} !")
@@ -30,7 +30,7 @@ def read_raw_training_data(symbol) -> pd.DataFrame:
 def read_raw_test_data(symbol) -> pd.DataFrame:
     dir = get_absolute_path.absolute(config['paths']['raw_test_data_directory'])
     file = symbol.split('/')[0]
-    print(f"Reading Test data: {file} !")
+    print(f"Reading Raw Test data: {file} !")
     try:
         data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
         print(f"Successfully read: {file} !")
@@ -42,7 +42,43 @@ def read_raw_test_data(symbol) -> pd.DataFrame:
 def read_raw_val_data(symbol) -> pd.DataFrame:
     dir = get_absolute_path.absolute(config['paths']['raw_val_data_directory'])
     file = symbol.split('/')[0]
-    print(f"Reading Validation data: {file} !")
+    print(f"Reading Raw Validation data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_featured_training_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['featured_training_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading Featured Training data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_featured_test_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['featured_test_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading Featured Test data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_featured_val_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['featured_val_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading Featured Validation data: {file} !")
     try:
         data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
         print(f"Successfully read: {file} !")

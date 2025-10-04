@@ -9,7 +9,7 @@ def link(data = 'val-test'):
         if data == 'training-val':
             data1 = read_file.read_raw_training_data(symbol)
             data2 = read_file.read_raw_val_data(symbol)
-            data1 = data1.tail(200)
+            data1 = data1.tail(config['data']['backdate'])
             data2 = pd.concat([data1, data2])
             data_dir = get_absolute_path.absolute(config['paths']['raw_val_data_directory'])
             symbol = symbol.split('/')[0]
@@ -18,7 +18,7 @@ def link(data = 'val-test'):
         else:
             data1 = read_file.read_raw_val_data(symbol)
             data2 = read_file.read_raw_test_data(symbol)
-            data1 = data1.tail(200)
+            data1 = data1.tail(config['data']['backdate'])
             data2 = pd.concat([data1, data2])
             data_dir = get_absolute_path.absolute(config['paths']['raw_test_data_directory'])
             symbol = symbol.split('/')[0]

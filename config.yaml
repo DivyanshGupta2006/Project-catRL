@@ -18,6 +18,7 @@ paths:
 
 data:
   timeframe: '4h'
+  backdate: 200
   start_date: '2020-05-28' # taking 200 extra candles to account for null values encountered during feature engineering
   end_date: '2025-06-30'
   train_val_split: '2024-06-30'
@@ -31,6 +32,6 @@ data:
     - 'ADA/USDT'
     - 'AVAX/USDT'
     - 'LINK/USDT'
-    - 'MATIC/USDT'
+    - 'XRP/USDT'
     - 'LTC/USDT'
     - 'UNI/USDT'
