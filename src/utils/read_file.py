@@ -1,3 +1,4 @@
+import joblib
 import pandas as pd
 from src.utils import get_absolute_path, get_config
 
@@ -85,4 +86,16 @@ def read_featured_val_data(symbol) -> pd.DataFrame:
         return data
     except Exception as e:
         print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_preprocessor(symbol):
+    dir = get_absolute_path.absolute(config['paths']['preprocessor_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading Preprocessor data: {file} !")
+    try:
+        pre = joblib.load(f'{dir}/{file}.joblib')
+        print(f"Successfully loaded: {file} !")
+        return pre
+    except Exception as e:
+        print(f"Failed to load {file}: {e} !")
         return None

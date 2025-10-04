@@ -10,7 +10,7 @@ paths:
   featured_test_data_directory: "data/test/featured/"
   processed_val_data_directory: "data/validation/processed/"
   featured_val_data_directory: "data/validation/featured/"
-  preprocessor_directory: "model/preprocessor/"
+  preprocessor_directory: "models/preprocessor/"
   report_directory: "reports/"
   model_directory: "models/"
   env_directory: ".env"
