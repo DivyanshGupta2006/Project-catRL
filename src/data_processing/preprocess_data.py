@@ -39,12 +39,13 @@ def preprocess(type='training'):
         # Scaling the data
         if (type == 'training'):
             scaler = MinMaxScaler()
-            scaler.fit(data)
+            scaler.fit(data.loc[:,'open':])
             symbol = symbol.split('/')[0]
             joblib.dump(scaler, pre_dir / f'{symbol}.joblib')
         else:
             scaler = read_file.read_preprocessor(symbol)
-        data_scaled = pd.DataFrame(scaler.transform(data))
+        data_scaled = data.copy()
+        data_scaled.loc[:,'open':] = (scaler.transform(data.loc[:,'open':]))
         symbol = symbol.split('/')[0]
         path = f'{symbol}.csv'
         data_scaled.to_csv(data_dir / path)
