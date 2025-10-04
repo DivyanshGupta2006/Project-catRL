@@ -6,4 +6,5 @@ def preprocess():
     print("Preprocessing data....")
     symbols = config['data']['symbols']
     for symbol in symbols:
-        data = read_file.read_featured_data(symbol)
+        # data = read_file.read_featured_data(symbol)
+        pass
