@@ -99,3 +99,75 @@ def read_preprocessor(symbol):
     except Exception as e:
         print(f"Failed to load {file}: {e} !")
         return None
+
+def read_preprocessed_training_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['processed_training_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading preprocessed Training data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_preprocessed_test_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['processed_test_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading preprocessed Test data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_preprocessed_val_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['processed_val_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading preprocessed Validation data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_merged_training_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['merged_training_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading merged Training data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_merged_test_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['merged_test_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading merged Test data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_merged_val_data(symbol) -> pd.DataFrame:
+    dir = get_absolute_path.absolute(config['paths']['merged_val_data_directory'])
+    file = symbol.split('/')[0]
+    print(f"Reading merged Validation data: {file} !")
+    try:
+        data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
+        print(f"Successfully read: {file} !")
+        return data
+    except Exception as e:
+        print(f"Failed to read {file}: {e} !")
+        return None

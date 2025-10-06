@@ -49,5 +49,3 @@ def preprocess(type='training'):
         symbol = symbol.split('/')[0]
         path = f'{symbol}.csv'
         data_scaled.to_csv(data_dir / path)
-
-

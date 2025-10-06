@@ -3,7 +3,7 @@ Potential Improvements:
  - Train, Validation, Test split.
  - Detrending during preprocessing of the data
  - Outlier handling
- - 
+ - Create Exposure variable
 <br>
 
 Authors:

@@ -10,6 +10,9 @@ paths:
   featured_test_data_directory: "data/test/featured/"
   processed_val_data_directory: "data/validation/processed/"
   featured_val_data_directory: "data/validation/featured/"
+  merged_training_data_directory: "data/training/merged"
+  merged_val_data_directory: "data/validation/merged"
+  merged_test_data_directory: "data/test/merged"
   preprocessor_directory: "models/preprocessor/"
   report_directory: "reports/"
   model_directory: "models/"
@@ -34,7 +37,6 @@ data:
     - 'BNB/USDT'
     - 'SOL/USDT'
     - 'ADA/USDT'
-    - 'AVAX/USDT'
     - 'LINK/USDT'
     - 'XRP/USDT'
     - 'LTC/USDT'
