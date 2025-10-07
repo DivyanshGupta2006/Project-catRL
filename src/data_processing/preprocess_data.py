@@ -39,7 +39,7 @@ def preprocess(type='training'):
         # Scaling the data
         if (type == 'training'):
             scaler = MinMaxScaler()
-            scaler.fit(data.loc[:,'open':])
+            scaler.fit(data)
             symbol = symbol.split('/')[0]
             joblib.dump(scaler, pre_dir / f'{symbol}.joblib')
         else:
