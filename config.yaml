@@ -23,11 +23,11 @@ paths:
 data:
   timeframe: '4h'
   backdate: 200
-  start_date: '2020-05-28' # taking 200 extra candles to account for null values encountered during feature engineering
-  begin_train_date: '2020-07-01'
-  begin_val_date: '2024-07-01'
-  begin_test_date: '2025-01-01'
-  end_date: '2025-06-30'
+  start_date: '2020-08-28' # taking 200 extra candles to account for null values encountered during feature engineering
+  begin_train_date: '2020-10-01'
+  begin_val_date: '2024-10-01'
+  begin_test_date: '2025-04-01'
+  end_date: '2025-09-30'
   train_val_split: '2024-06-30'
   val_test_split: '2024-12-31'
   exchange: 'binance'
