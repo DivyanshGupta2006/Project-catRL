@@ -47,3 +47,4 @@ strategy:
   take_profit_multiple: 2.0
   stop_loss_portion : 1.0
   take_profit_portion : 1.0
+  slippage_fraction : 0.002
