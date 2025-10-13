@@ -4,6 +4,7 @@ Potential Improvements:
  - Detrending during preprocessing of the data
  - Outlier handling
  - Create Exposure variable
+ - correct take profit implementation
 <br>
 
 Authors:

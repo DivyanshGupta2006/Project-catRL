@@ -9,6 +9,5 @@ def predict_position(candles):
         'XRP' : 0.11,
         'LTC' : 0.11,
         'XLM' : 0.11,
-        'USDT' : 0.01,
-
+        'USDT' : 0.01
     }
