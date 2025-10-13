@@ -40,4 +40,10 @@ data:
     - 'LINK/USDT'
     - 'XRP/USDT'
     - 'LTC/USDT'
-    - 'UNI/USDT'
+    - 'XLM/USDT'
+
+strategy:
+  stop_loss_multiple: 1.5
+  take_profit_multiple: 2.0
+  stop_loss_portion : 1.0
+  take_profit_portion : 1.0
