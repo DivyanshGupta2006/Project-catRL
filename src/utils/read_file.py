@@ -2,6 +2,7 @@ import joblib
 import pandas as pd
 import json
 from src.utils import get_absolute_path, get_config
+import json
 
 config = get_config.read_yaml()
 
