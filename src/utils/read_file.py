@@ -2,6 +2,7 @@ import joblib
 import pandas as pd
 import json
 from src.utils import get_absolute_path, get_config
+import json
 
 config = get_config.read_yaml()
 
@@ -134,7 +135,7 @@ def read_merged_val_data() -> pd.DataFrame:
 def read_portfolio():
     dir = get_absolute_path.absolute(config['paths']['portfolio_directory'])
     try:
-        data = pd.read_csv(dir,index_col=[0])
+        data = pd.read_csv(dir, index_col=[0])
         return data
     except Exception as e:
         return None
@@ -147,3 +148,4 @@ def read_state():
         return data
     except Exception as e:
         return None
+
