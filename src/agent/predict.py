@@ -4,5 +4,5 @@ config = get_config.read_yaml()
 
 def predict_position(candle):
     for crypto in candle.keys():
-        candle[crypto]['fiducias'] = 0.10
+        candle[crypto]['fiducia'] = 0.10
     return candle
