@@ -1,6 +1,7 @@
 import joblib
 import pandas as pd
 from src.utils import get_absolute_path, get_config
+import json
 
 config = get_config.read_yaml()
 
@@ -170,4 +171,13 @@ def read_merged_val_data() -> pd.DataFrame:
         return data
     except Exception as e:
         print(f"Failed to read {file}: {e} !")
+        return None
+
+def read_state():
+    dir = get_absolute_path.absolute(config['paths']['state_directory'])
+    try:
+        with open(dir, 'r') as f:
+            data = json.load(f)
+        return data
+    except Exception as e:
         return None

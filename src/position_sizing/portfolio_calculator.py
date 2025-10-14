@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from src.utils import get_config, get_absolute_path
+from src.utils import get_config, get_absolute_path, read_file
 
 config = get_config.read_yaml()
 
@@ -39,4 +39,6 @@ def calc_portfolio():
     df = pd.read_csv(filename)
     current_values = df['holding'] * df['order_price(USDT)']
     cur_holding = current_values.sum()
+    state = read_file.read_state()
+    cur_holding += state["cash"]
     return cur_holding
