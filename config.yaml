@@ -48,5 +48,5 @@ strategy:
   stop_loss_portion : 0.8
   take_profit_portion : 0.8
   slippage_cost_fraction : 0.002
-  transaction_cost_fraction : 0.008
+  transaction_cost_fraction : 0.001 # 0.075%
 
