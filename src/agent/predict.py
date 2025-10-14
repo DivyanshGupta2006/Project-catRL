@@ -1,13 +1,8 @@
+from src.utils import get_config
+
+config = get_config.read_yaml()
+
 def predict_position(candle):
-    return {
-        'ETH' : 0.11,
-        'BTC' : 0.11,
-        'BNB' : 0.11,
-        'SOL' : 0.11,
-        'ADA' : 0.11,
-        'LINK' : 0.11,
-        'XRP' : 0.11,
-        'LTC' : 0.11,
-        'XLM' : 0.11,
-        'USDT' : 0.01
-    }
+    for crypto in candle.keys():
+        candle[crypto]['fiducias'] = 0.10
+    return candle
