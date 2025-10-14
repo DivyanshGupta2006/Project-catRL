@@ -21,7 +21,7 @@ paths:
   state_directory: "state.json"
 
 data:
-  timeframe: '4h'
+  timeframe: '1h'
   backdate: 200
   start_date: '2020-08-28' # taking 200 extra candles to account for null values encountered during feature engineering
   begin_train_date: '2020-10-01'
@@ -45,7 +45,8 @@ data:
 strategy:
   stop_loss_multiple: 1.5
   take_profit_multiple: 2.0
-  stop_loss_portion : 1.0
-  take_profit_portion : 1.0
-  slippage_fraction : 0.002
+  stop_loss_portion : 0.8
+  take_profit_portion : 0.8
+  slippage_cost_fraction : 0.002
+  transaction_cost_fraction : 0.008
 

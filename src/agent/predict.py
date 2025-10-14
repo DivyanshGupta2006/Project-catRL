@@ -1,4 +1,4 @@
-def predict_position(candles):
+def predict_position(candle):
     return {
         'ETH' : 0.11,
         'BTC' : 0.11,
