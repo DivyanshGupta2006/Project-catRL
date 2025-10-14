@@ -134,7 +134,7 @@ def read_merged_val_data() -> pd.DataFrame:
 def read_portfolio():
     dir = get_absolute_path.absolute(config['paths']['portfolio_directory'])
     try:
-        data = pd.read_csv(dir)
+        data = pd.read_csv(dir, index_col=[0])
         return data
     except Exception as e:
         return None
