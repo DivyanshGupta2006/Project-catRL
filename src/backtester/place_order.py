@@ -1,0 +1,21 @@
+from src.utils import read_file
+
+def place(candle):
+    portfolio = read_file.read_portfolio()
+    order = {}
+    for crypto in candle.keys():
+        quantity = candle[crypto]['amt'] - portfolio.loc[crypto,'amt']
+        if quantity!=0:
+            order[crypto] = {
+                'quantity': quantity,
+                'order_price': candle[crypto]['order_price'],
+                'stop_price': candle[crypto]['stop_price'],
+                'stop_portion': candle[crypto]['stop_portion'],
+                'take_price': candle[crypto]['take_price'],
+                'take_portion': candle[crypto]['take_portion']
+            }
+    return order
+
+
+
+
