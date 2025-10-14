@@ -7,7 +7,7 @@ def place(candle):
         quantity = candle[crypto]['amt'] - portfolio.loc[crypto,'amt']
         if quantity!=0:
             order[crypto] = {
-                'quantity': quantity,
+                'order_amt': quantity,
                 'order_price': candle[crypto]['order_price'],
                 'stop_price': candle[crypto]['stop_price'],
                 'stop_portion': candle[crypto]['stop_portion'],
