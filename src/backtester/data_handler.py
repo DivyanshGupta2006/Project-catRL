@@ -20,7 +20,7 @@ def fetch_data(data):
 def add_predictions(candle):
     candle = predict.predict_position(candle)
     candle = slippage.get_order_price(candle)
-    candle = amount_calculator.calculate(candle)
+    candle = amount_calculator.calculate_amount(candle)
     candle = stop_loss.get_stop_loss(candle)
     candle = take_profit.get_take_profit(candle)
     return candle
