@@ -1,11 +1,14 @@
-from src.utils import get_config
-from src.position_sizing import portfolio_calculator
+from src.utils import get_config, read_file
 
 config = get_config.read_yaml()
 trans = config['strategy']['transaction_cost_fraction']
 
-def calculate(candle):
-    portfolio_value = portfolio_calculator.calculate()
+def calculate(candle, Pt):
+
     for crypto in candle.keys():
-        candle[crypto]['amt'] = ((candle[crypto]['fiducia'] * portfolio_value) / (candle[crypto]['order_price'] * (1 + trans)))
+        if candle[crypto]['order_price'] != candle[crypto]['close']:
+            candle[crypto]['amt'] = ((candle[crypto]['fiducia'] * Pt) / (candle[crypto]['order_price'] * (1 + trans)))
+        else:
+            portfolio = read_file.read_portfolio()
+            candle[crypto]['amt'] = portfolio.loc[crypto, 'amt']
     return candle
