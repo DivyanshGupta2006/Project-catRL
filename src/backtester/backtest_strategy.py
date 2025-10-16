@@ -1,8 +1,9 @@
+import json
 from src.backtester import data_handler, place_order, execute_order, rebalance
 from src.agent import predict
 from src.risk_management import slippage, stop_loss, take_profit
 from src.position_sizing import amount_calculator, portfolio_calculator
-
+from src.utils import read_file
 
 def backtest_step(data):
     candle = data_handler.fetch_data(data)
@@ -18,4 +19,8 @@ def backtest_step(data):
     rebalance.rebalance_state(order)
 
 def backtest():
-    pass
+    data = read_file.read_merged_test_data()
+    state = read_file.read_state()
+    state['timestep'] = data.index[0]
+
+    for d in range(len(data)):
