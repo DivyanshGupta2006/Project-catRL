@@ -7,6 +7,11 @@ Potential Improvements:
  - Correct take-profit implementation
 <br>
 
+To-Do:
+ - Documentation
+
+<br>
+
 Authors:
 <br>
 Divyansh Gupta

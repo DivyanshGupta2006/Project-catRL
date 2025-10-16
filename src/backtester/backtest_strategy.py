@@ -1,4 +1,3 @@
-import json
 from src.backtester import data_handler, place_order, execute_order, rebalance
 from src.agent import predict
 from src.risk_management import slippage, stop_loss, take_profit
