@@ -49,4 +49,3 @@ strategy:
   take_profit_portion : 0.8
   slippage_cost_fraction : 0.002
   transaction_cost_fraction : 0.001
-

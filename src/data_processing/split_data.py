@@ -23,7 +23,6 @@ def split():
             print(f"Test set shape: {df_test.shape}")
         symbol = symbol.split('/')[0]
         path = f'{symbol}.csv'
-        print(f'Saving {symbol}...')
         df_train.to_csv(train_data_dir / path)
         df_val.to_csv(val_data_dir / path)
         df_test.to_csv(test_data_dir / path)

@@ -5,6 +5,7 @@ config = get_config.read_yaml()
 
 def link(data = 'val-test'):
     symbols = config['data']['symbols']
+    print("Linking data...")
     for symbol in symbols:
         if data == 'training-val':
             data1 = read_file.read_raw_training_data(symbol)

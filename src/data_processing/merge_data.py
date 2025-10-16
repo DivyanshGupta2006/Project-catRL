@@ -5,7 +5,7 @@ from src.utils import get_config, get_absolute_path, check_dir, read_file
 config = get_config.read_yaml()
 
 def merge(type='training'):
-    print('Merging...')
+    print('Merging data...')
     symbols = config['data']['symbols']
     if type == 'training':
         data_dir = get_absolute_path.absolute(config['paths']['merged_training_data_directory'])
@@ -16,7 +16,6 @@ def merge(type='training'):
     check_dir.check(data_dir)
     merged_data = pd.DataFrame()
     for symbol in symbols:
-        print(symbol)
         if type == 'training':
             data = read_file.read_preprocessed_training_data(symbol)
         elif type == 'val':
