@@ -4,11 +4,12 @@ config = get_config.read_yaml()
 trans = config['strategy']['transaction_cost_fraction']
 
 def calculate(candle, Pt):
+    cryptos = list({token for (_, token) in candle.index})
 
-    for crypto in candle.keys():
-        if candle[crypto]['order_price'] != candle[crypto]['close']:
-            candle[crypto]['amt'] = ((candle[crypto]['fiducia'] * Pt) / (candle[crypto]['order_price'] * (1 + trans)))
+    for crypto in cryptos:
+        if candle[('order_price',crypto)] != candle[('close',crypto)]:
+            candle[('amt', crypto)] = ((candle[('fiducia',crypto)] * Pt) / (candle[('order_price',crypto)] * (1 + trans)))
         else:
             portfolio = read_file.read_portfolio()
-            candle[crypto]['amt'] = portfolio.loc[crypto, 'amt']
+            candle[('amt',crypto)] = portfolio.loc[crypto, 'amt']
     return candle

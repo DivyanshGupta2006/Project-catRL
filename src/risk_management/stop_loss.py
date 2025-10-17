@@ -1,9 +1,10 @@
-from src.utils import get_config
+from src.utils import get_config, read_file
 
 config = get_config.read_yaml()
 
 def get_stop_loss(candle):
-    for crypto in candle.keys():
-        candle[crypto]['stop_price'] = candle[crypto]['order_price'] - (config['strategy']['stop_loss_multiple'] * candle[crypto]['atr'] * candle[crypto]['fiducia'] / abs(candle[crypto]['fiducia']))
-        candle[crypto]['stop_portion'] = config['strategy']['stop_loss_portion'] * candle[crypto]['amt']
+    cryptos = list({token for (_, token) in candle.index})
+    for crypto in cryptos:
+        candle[('stop_price',crypto)] = candle[('order_price',crypto)] + ( config['strategy']['stop_loss_multiple'] * candle[('atr',crypto)] * candle[('fiducia',crypto)] / abs(candle[('fiducia',crypto)]) )
+        candle[('stop_portion',crypto)] = config['strategy']['stop_loss_portion'] * candle[('amt',crypto)]
     return candle

@@ -24,7 +24,7 @@ def merge(type='training'):
             data = read_file.read_preprocessed_test_data(symbol)
         symbol = symbol.split('/')[0]
         for col in data.columns:
-            data.rename(columns={col : (col, symbol)}, inplace=True)
+            data.rename(columns={col : (col,symbol)}, inplace=True)
         if merged_data.empty:
             merged_data = data
         else:
