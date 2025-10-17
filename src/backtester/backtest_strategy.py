@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from src.backtester import data_handler, place_order, execute_order, rebalance_state_and_portfolio, execute_SL_TP
 from src.agent import predict
@@ -44,5 +45,5 @@ def backtest():
     state['cash'] = 100000
     update_state.update(state)
 
-    for d in range(len(data)):
+    for d in tqdm(range(len(data)), desc="Backtesting Progress"):
         backtest_step(data)
