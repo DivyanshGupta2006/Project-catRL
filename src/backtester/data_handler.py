@@ -1,15 +1,19 @@
 import pandas as pd
-import json
+import ast
 
 from src.update_files import update_state
-from src.utils import get_config, read_file, get_absolute_path
+from src.utils import get_config, read_file
 
 config = get_config.read_yaml()
 
 def fetch_data(data):
     state = read_file.read_state()
+    row = data.loc[state['timestep']].copy()
     current_timestep = pd.to_datetime(state['timestep'])
     state['timestep'] = current_timestep + pd.Timedelta(config['data']['timeframe'])
-    state['timestep'] = state['timestep'].strftime("%Y-%m-%dT%H:%M:%SZ")
+    state['timestep'] = state['timestep'].strftime("%Y-%m-%d %H:%M:%S")
     update_state.update(state)
-    return data.loc[current_timestep].copy()
+    row.index = row.index.map(ast.literal_eval)
+    candle_df = row.unstack(level=0)
+    candle = candle_df.to_dict(orient='index')
+    return candle
