@@ -5,7 +5,7 @@ from src.utils import get_config, get_absolute_path, check_dir, read_file
 
 config = get_config.read_yaml()
 
-def preprocess(type='training'):
+def preprocess(type='training', to_normalize=True):
     print("Preprocessing data....")
     symbols = config['data']['symbols']
     if type == 'training':
@@ -36,15 +36,18 @@ def preprocess(type='training'):
         # Handling NaN values
         data = data.ffill()
 
-        # Scaling the data
-        if (type == 'training'):
-            scaler = MinMaxScaler()
-            scaler.fit(data)
-            symbol = symbol.split('/')[0]
-            joblib.dump(scaler, pre_dir / f'{symbol}.joblib')
+        if to_normalize:
+            # Scaling the data
+            if (type == 'training'):
+                scaler = MinMaxScaler()
+                scaler.fit(data)
+                symbol = symbol.split('/')[0]
+                joblib.dump(scaler, pre_dir / f'{symbol}.joblib')
+            else:
+                scaler = read_file.read_preprocessor(symbol)
+            data_scaled = pd.DataFrame(scaler.transform(data), columns=data.columns, index=data.index)
         else:
-            scaler = read_file.read_preprocessor(symbol)
-        data_scaled = pd.DataFrame(scaler.transform(data), columns=data.columns, index=data.index)
+            data_scaled = data
         symbol = symbol.split('/')[0]
         path = f'{symbol}.csv'
         data_scaled.to_csv(data_dir / path)

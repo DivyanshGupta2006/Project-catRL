@@ -14,6 +14,6 @@ def set_portfolio():
         new_symbols.append(symbol)
     portfolio = read_file.read_portfolio()
     portfolio['symbol'] = new_symbols
-    portfolio[['amt', 'order_price', 'stop_price', 'stop_portion', 'take_price', 'take_portion']] = 0
+    portfolio[['amt', 'order_price', 'stop_price', 'stop_portion', 'take_price', 'take_portion']] = 0.0
     dir = get_absolute_path.absolute(config['paths']['portfolio_directory'])
     portfolio.to_csv(dir, index=False)

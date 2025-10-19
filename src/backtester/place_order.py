@@ -3,19 +3,17 @@ from src.utils import read_file
 def place(candle):
     portfolio = read_file.read_portfolio()
     order = {}
-    cryptos = list({token for (_, token) in candle.index})
 
-    for crypto in cryptos:
-        quantity = candle[('amt',crypto)] - portfolio.loc[crypto,'amt']
-        if quantity != 0:
-            order[crypto] = {
-                'order_amt': quantity,
-                'order_price': candle[('order_price',crypto)],
-                'stop_price': candle[('stop_price',crypto)],
-                'stop_portion': candle[('stop_portion',crypto)],
-                'take_price': candle[('take_price',crypto)],
-                'take_portion': candle[('take_portion',crypto)]
-            }
+    for crypto in candle:
+        quantity = candle[crypto]['amt'] - portfolio.loc[crypto,'amt']
+        order[crypto] = {
+            'order_amt': quantity,
+            'order_price': candle[crypto]['order_price'],
+            'stop_price': candle[crypto]['stop_price'],
+            'stop_portion': candle[crypto]['stop_portion'],
+            'take_price': candle[crypto]['take_price'],
+            'take_portion': candle[crypto]['take_portion']
+        }
 
     return order
 

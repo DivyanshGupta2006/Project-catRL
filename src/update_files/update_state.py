@@ -14,7 +14,8 @@ def set_state(data, capital):
     state = read_file.read_state()
     state['timestep'] = start
     state['cash'] = capital
-    state['returns'] = 0
-    state['drawdown'] = 0
-    state['sharpe ratio'] = 0
+    state['transaction_cost'] = 0.0
+    state['returns'] = 0.0
+    state['drawdown'] = 0.0
+    state['sharpe ratio'] = 0.0
     update(state)

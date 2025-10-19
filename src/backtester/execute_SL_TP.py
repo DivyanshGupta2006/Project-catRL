@@ -1,5 +1,3 @@
-import pandas as pd
-
 from src.utils import get_config, read_file
 from src.update_files import update_state, update_portfolio
 
@@ -11,25 +9,26 @@ def execute(candle):
 
     for crypto in portfolio.index:
         # shorting
-        if portfolio.loc[crypto, 'stop_price'] < 0:
-            if candle[('high', crypto)] > portfolio.loc[crypto, 'stop_price']:
-                state['cash'] -= portfolio.loc[crypto, 'stop_price'] * portfolio.loc[crypto, 'stop_portion']
-                portfolio.loc[crypto, 'stop_price'] += portfolio.loc[crypto, 'stop_portion']
+        if portfolio.loc[crypto, 'amt'] < 0:
+            if candle[crypto]['high'] > portfolio.loc[crypto, 'stop_price']:
+                portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'stop_portion']
+                print(f"DEBUG: crypto={crypto}, stop_portion={portfolio.loc[crypto, 'stop_portion']}, stop_price={portfolio.loc[crypto, 'stop_price']}, cash={state['cash']}")
+                state['cash'] += (portfolio.loc[crypto, 'stop_portion'] * portfolio.loc[crypto, 'stop_price'])
 
-            elif candle[('low', crypto)] < portfolio.loc[crypto, 'take_price']:
-                state['cash'] -= portfolio.loc[crypto, 'take_price'] * portfolio.loc[crypto, 'take_portion']
-                portfolio.loc[crypto, 'stop_price'] += portfolio.loc[crypto, 'take_portion']
+            elif candle[crypto]['low'] < portfolio.loc[crypto, 'take_price']:
+                portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'take_portion']
+                print(f"DEBUG: crypto={crypto}, stop_portion={portfolio.loc[crypto, 'stop_portion']}, stop_price={portfolio.loc[crypto, 'stop_price']}, cash={state['cash']}")
+                state['cash'] += (portfolio.loc[crypto, 'take_portion'] * portfolio.loc[crypto, 'take_price'])
 
         # longing
-        elif portfolio.loc[crypto, 'stop_price'] > 0:
-            if candle[('low', crypto)] < portfolio.loc[crypto, 'stop_price']:
-                state['cash'] += portfolio.loc[crypto, 'stop_price'] * portfolio.loc[crypto, 'stop_portion']
-                portfolio.loc[crypto, 'stop_price'] -= portfolio.loc[crypto, 'stop_portion']
+        elif portfolio.loc[crypto, 'amt'] > 0:
+            if candle[crypto]['low'] < portfolio.loc[crypto, 'stop_price']:
+                portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'stop_portion']
+                state['cash'] += (portfolio.loc[crypto, 'stop_portion'] * portfolio.loc[crypto, 'stop_price'])
 
-            elif candle[('high', crypto)] > portfolio.loc[crypto, 'take_price']:
-                state['cash'] += portfolio.loc[crypto, 'take_price'] * portfolio.loc[crypto, 'take_portion']
-                portfolio.loc[crypto, 'stop_price'] -= portfolio.loc[crypto, 'take_portion']
+            elif candle[crypto]['high'] > portfolio.loc[crypto, 'take_price']:
+                portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'take_portion']
+                state['cash'] += (portfolio.loc[crypto, 'take_portion'] * portfolio.loc[crypto, 'take_price'])
 
-    # this should be done before placing orders
     update_portfolio.update(portfolio)
     update_state.update(state)
