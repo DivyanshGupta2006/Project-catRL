@@ -43,6 +43,7 @@ data:
     - 'XLM/USDT'
 
 strategy:
+  capital: 100000
   stop_loss_multiple: 1.5
   take_profit_multiple: 2.0
   stop_loss_portion : 0.8
