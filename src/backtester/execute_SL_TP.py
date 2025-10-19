@@ -12,12 +12,10 @@ def execute(candle):
         if portfolio.loc[crypto, 'amt'] < 0:
             if candle[crypto]['high'] > portfolio.loc[crypto, 'stop_price']:
                 portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'stop_portion']
-                print(f"DEBUG: crypto={crypto}, stop_portion={portfolio.loc[crypto, 'stop_portion']}, stop_price={portfolio.loc[crypto, 'stop_price']}, cash={state['cash']}")
                 state['cash'] += (portfolio.loc[crypto, 'stop_portion'] * portfolio.loc[crypto, 'stop_price'])
 
             elif candle[crypto]['low'] < portfolio.loc[crypto, 'take_price']:
                 portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'take_portion']
-                print(f"DEBUG: crypto={crypto}, stop_portion={portfolio.loc[crypto, 'stop_portion']}, stop_price={portfolio.loc[crypto, 'stop_price']}, cash={state['cash']}")
                 state['cash'] += (portfolio.loc[crypto, 'take_portion'] * portfolio.loc[crypto, 'take_price'])
 
         # longing

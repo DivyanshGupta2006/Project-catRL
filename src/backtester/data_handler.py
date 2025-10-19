@@ -9,7 +9,6 @@ config = get_config.read_yaml()
 def fetch_data(data):
     state = read_file.read_state()
     row = data.loc[state['timestep']].copy()
-    print(state['timestep'])
     current_timestep = pd.to_datetime(state['timestep'])
     state['timestep'] = current_timestep + pd.Timedelta(config['data']['timeframe'])
     state['timestep'] = state['timestep'].strftime("%Y-%m-%d %H:%M:%S")

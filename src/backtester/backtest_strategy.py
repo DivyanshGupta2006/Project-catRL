@@ -13,7 +13,7 @@ config = get_config.read_yaml()
 
 def backtest_step(data):
     candle = data_handler.fetch_data(data)
-    # execute_SL_TP.execute(candle)
+    execute_SL_TP.execute(candle)
     candle = predict_position.predict(candle)
     Pt = portfolio_calculator.calculate(candle)
     candle = slippage.get_order_price(candle, Pt)
