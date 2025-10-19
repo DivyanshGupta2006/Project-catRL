@@ -44,8 +44,8 @@ data:
 
 strategy:
   capital: 100000
-  stop_loss_multiple: 1.5
-  take_profit_multiple: 2.0
+  stop_loss_multiple: 4.5
+  take_profit_multiple: 6.0
   stop_loss_portion : 0.8
   take_profit_portion : 0.8
   slippage_cost_fraction : 0.002
