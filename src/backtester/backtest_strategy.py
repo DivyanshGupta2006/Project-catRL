@@ -32,4 +32,5 @@ def backtest():
     # last row
     candle = data_handler.fetch_data(data)
     execute_SL_TP.execute(candle)
-    print(portfolio_calculator.calculate(candle))
+    print(f'Initial portfolio value: {100000}')
+    print(f'Final portfolio value: {portfolio_calculator.calculate(candle)}')
