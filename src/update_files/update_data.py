@@ -10,7 +10,7 @@ def update():
     feature_engineer.create_features(type='training')
     feature_engineer.create_features(type='val')
     feature_engineer.create_features(type='test')
-    preprocess_data.preprocess(type='training')
+    preprocess_data.preprocess(type='training', to_normalize=False)
     preprocess_data.preprocess(type='val', to_normalize=False)
     preprocess_data.preprocess(type='test', to_normalize=False)
     merge_data.merge(type='training')

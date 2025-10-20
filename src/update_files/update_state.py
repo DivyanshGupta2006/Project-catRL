@@ -9,10 +9,9 @@ def update(state):
     with open(dir, 'w') as f:
         json.dump(state, f, indent=4)
 
-def set_state(data, capital):
-    start = data.index[0]
+def set_state(capital):
     state = read_file.read_state()
-    state['timestep'] = start
+    state['timestep'] = 0
     state['cash'] = capital
     state['metrics'] = {'transaction_cost': 0.0,
         'returns': 0.0,

@@ -1,4 +1,3 @@
-import pandas as pd
 import ast
 
 from src.update_files import update_state
@@ -8,10 +7,8 @@ config = get_config.read_yaml()
 
 def fetch_data(data):
     state = read_file.read_state()
-    row = data.loc[state['timestep']].copy()
-    current_timestep = pd.to_datetime(state['timestep'])
-    state['timestep'] = current_timestep + pd.Timedelta(config['data']['timeframe'])
-    state['timestep'] = state['timestep'].strftime("%Y-%m-%d %H:%M:%S")
+    row = data.loc[data.index[state['timestep']]].copy()
+    state['timestep'] += 1
     update_state.update(state)
     row.index = row.index.map(ast.literal_eval)
     candle_df = row.unstack(level=0)
