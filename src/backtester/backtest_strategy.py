@@ -1,7 +1,7 @@
 from tqdm import tqdm
 
 from src.backtester import data_handler, place_order, execute_order, execute_SL_TP, print_backtesting_results, calculate_metrics
-from src.agent import predict_position
+from src.strategy import predict_position
 from src.risk_management import slippage, stop_loss, take_profit
 from src.position_sizing import amount_calculator, portfolio_calculator
 from src.update_files import update_state, update_portfolio
