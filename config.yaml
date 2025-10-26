@@ -50,3 +50,8 @@ strategy:
   take_profit_portion : 0.7
   slippage_cost_fraction : 0.002
   transaction_cost_fraction : 0.001
+
+hyperparameters:
+  num_lstm_layers: 1
+  num_epochs: 50
+  learning_rate: 0.001

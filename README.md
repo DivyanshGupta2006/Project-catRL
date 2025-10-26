@@ -4,11 +4,11 @@ Potential Improvements:
  - Detrending during preprocessing of the data
  - Outlier handling
  - Create Exposure variable
- - Correct take-profit implementation
 <br>
 
 To-Do:
  - Documentation
+ - Try transformers in PPO
 
 <br>
 
