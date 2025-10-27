@@ -26,7 +26,7 @@ class Agent:
         self.optimizer = Adam(self.model.parameters(), lr=lr)
         self.value_loss_fn = nn.MSELoss()
 
-    def _compute_gae(self, rewards, values, dones, last_value):
+    def _compute_gae(self, rewards, values, dones, buffer):
         advantages = torch.zeros_like(rewards).to(self.device)
 
         last_gae_lam = 0
@@ -46,15 +46,17 @@ class Agent:
             advantages[t] = last_gae_lam = delta + self.gamma * self.gae_lambda * last_gae_lam * next_non_terminal
 
         returns = advantages + values
+        buffer.advantages = advantages.tolist()
+        buffer.returns = returns.tolist()
 
         return advantages, returns
 
     def update(self, buffer, batch_size, update_epochs):
-        states = buffer['states'].to(self.device)
-        actions = buffer['actions'].to(self.device)
-        old_log_probs = buffer['log_probs'].to(self.device)
-        advantages = buffer['advantages'].to(self.device)
-        returns = buffer['returns'].to(self.device)
+        states = torch.tensor(buffer.states,dtype=torch.float32).to(self.device)
+        actions = torch.tensor(buffer.actions,dtype=torch.float32).to(self.device)
+        old_log_probs = torch.tensor(buffer.log_probs,dtype=torch.float32).to(self.device)
+        advantages = torch.tensor(buffer.advantages,dtype=torch.float32).to(self.device)
+        returns = torch.tensor(buffer.returns,dtype=torch.float32).to(self.device)
 
         advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
