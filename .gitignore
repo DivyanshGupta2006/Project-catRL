@@ -2,6 +2,7 @@ data/
 models/
 reports/
 .venv/
+.run/
 .idea/
 __pycache__/
 *.pyc
