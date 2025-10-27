@@ -19,6 +19,8 @@ class Model(nn.Module):
         self.lstm_hidden_dim = config['hyperparameters']['hidden_state_dim']
         self.n_assets = n_assets
         self.n_lstm_layers = config['hyperparameters']['num_lstm_layers']
+        self.actor_hidden_dim = config['hyperparameters']['actor_hidden_dim']
+        self.critic_hidden_dim = config['hyperparameters']['critic_hidden_dim']
 
         self.lstm = nn.LSTM(
             input_size=input_dim,
@@ -26,13 +28,13 @@ class Model(nn.Module):
             num_layers=self.n_lstm_layers,
             batch_first=True)
 
-        self.actor_head = nn.Linear(
-            self.lstm_hidden_dim,
-            n_assets * 2)
+        self.actor_head = nn.Sequential(
+            nn.Linear(self.lstm_hidden_dim, self.actor_hidden_dim),
+            nn.Linear(self.actor_hidden_dim, n_assets * 2))
 
-        self.critic_head = nn.Linear(
-            self.lstm_hidden_dim,
-            1)
+        self.critic_head = nn.Sequential(
+            nn.Linear(self.lstm_hidden_dim, self.critic_hidden_dim),
+            nn.Linear(self.critic_hidden_dim, 1))
 
     def init_hidden_state(self, batch_size=1, device='cpu'):
         h_0 = torch.zeros(self.n_lstm_layers, batch_size, self.lstm_hidden_dim).to(device)
