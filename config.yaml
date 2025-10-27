@@ -22,8 +22,9 @@ paths:
 
 data:
   timeframe: '1h'
-  backdate: 200
-  start_date: '2020-08-28' # taking 200 extra candles to account for null values encountered during feature engineering
+  backdate: 300
+  normalization_window: 30
+  start_date: '2020-06-01' # taking 250 extra candles to account for null values encountered during feature engineering and rolling window normalization
   begin_train_date: '2020-10-01'
   begin_val_date: '2024-10-01'
   begin_test_date: '2025-04-01'
@@ -53,5 +54,9 @@ strategy:
 
 hyperparameters:
   num_lstm_layers: 1
+  hidden_state_dim: 256
   num_epochs: 50
   learning_rate: 0.001
+
+environment:
+  window_size: 72
