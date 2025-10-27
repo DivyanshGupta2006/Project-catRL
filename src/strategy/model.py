@@ -15,7 +15,9 @@ class Model(nn.Module):
         super(Model, self).__init__()
 
         self.input_dim = input_dim
-        self.lstm_hidden_dim = config['hyperparameters']['num_lstm_layers']
+        self.lstm_hidden_dim = config['hyperparameters']['hidden_state_dim']
+        self.actor_hidden_dim = config['hyperparameters']['actor_hidden_dim']
+        self.critic_hidden_dim = config['hyperparameters']['critic_hidden_dim']
         self.n_assets = n_assets
         self.n_lstm_layers = config['hyperparameters']['num_lstm_layers']
 
@@ -25,8 +27,10 @@ class Model(nn.Module):
             num_layers=self.n_lstm_layers,
             batch_first=True)
 
-        self.actor_head = nn.Linear(self.lstm_hidden_dim, n_assets * 2)
-        self.critic_head = nn.Linear(self.lstm_hidden_dim, 1)
+        self.actor_head = nn.Sequential(nn.Linear(self.lstm_hidden_dim, self.actor_hidden_dim),
+            nn.Linear(self.actor_hidden_dim, n_assets * 2))
+        self.critic_head = nn.Sequential(nn.Linear(self.lstm_hidden_dim, self.critic_hidden_dim),
+            nn.Linear(self.critic_hidden_dim, 1))
 
     def init_hidden_state(self, batch_size=1, device='cpu'):
         h_0 = torch.zeros(self.n_lstm_layers, batch_size, self.lstm_hidden_dim).to(device)
@@ -48,13 +52,13 @@ class Model(nn.Module):
         stds = torch.exp(log_std)
         dist = Normal(means, stds)
 
-        return dist, value, hidden_state_out
+        return means, stds, dist, value, hidden_state_out
 
     def get_action_and_value(self,
                              x,
                              hidden_state=None,
                              action=None):
-        dist, value, hidden_state_out = self.forward(x, hidden_state)
+        means, stds, dist, value, hidden_state_out = self.forward(x, hidden_state)
 
         if action is None:
             action = dist.sample()

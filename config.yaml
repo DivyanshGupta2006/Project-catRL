@@ -29,6 +29,7 @@ data:
   begin_val_date: '2024-10-01'
   begin_test_date: '2025-04-01'
   end_date: '2025-09-30'
+  num_features: 14
   train_val_split: '2024-09-30'
   val_test_split: '2025-03-31'
   exchange: 'binance'
@@ -55,8 +56,14 @@ strategy:
 hyperparameters:
   num_lstm_layers: 1
   hidden_state_dim: 256
+  actor_hidden_dim: 64
+  critic_hidden_dim: 64
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_epsilon: 0.2
+  value_loss_coef: 0.5
+  entropy_loss_coef: 0.01
+  batch_size: 128
   num_epochs: 50
   learning_rate: 0.001
-
-environment:
   window_size: 72
