@@ -48,8 +48,9 @@ class Agent:
         returns = advantages + values
         buffer.advantages = advantages.tolist()
         buffer.returns = returns.tolist()
+        buffer.dones = dones.tolist()
 
-        return advantages, returns
+        return advantages, returns, buffer
 
     def update(self, buffer, batch_size, update_epochs):
         states = torch.tensor(buffer.states,dtype=torch.float32).to(self.device)

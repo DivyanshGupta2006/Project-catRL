@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 from torch.nn.functional import softplus, softmax
+from src.strategy.buffer import Buffer
 
 from src.utils import get_config
 
@@ -61,16 +62,20 @@ class Model(nn.Module):
     def get_action_and_value(self,
                              x,
                              hidden_state=None,
-                             action=None):
+                             action=None,
+                             buffer = None):
         dist, value, hidden_state_out = self.forward(x, hidden_state)
-
+        if buffer is None:
+            buffer = Buffer()
+        buffer.states = x.tolist()
         if action is None:
             action = dist.sample()
-
+            buffer.actions = action.tolist()
         log_prob = dist.log_prob(action).sum(dim=-1)
+        buffer.log_probs = log_prob
         entropy = dist.entropy().sum(dim=-1)
 
-        return action, log_prob, entropy, value, hidden_state_out
+        return action, log_prob, entropy, value, hidden_state_out, buffer
 
     @staticmethod
     def get_fiduciae(actor_out):
