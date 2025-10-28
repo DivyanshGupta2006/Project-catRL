@@ -1,4 +1,3 @@
-import joblib
 import pandas as pd
 import json
 from src.utils import get_absolute_path, get_config
@@ -66,15 +65,6 @@ def read_featured_val_data(symbol) -> pd.DataFrame:
     try:
         data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
         return data
-    except Exception as e:
-        return None
-
-def read_preprocessor(symbol):
-    dir = get_absolute_path.absolute(config['paths']['preprocessor_directory'])
-    file = symbol.split('/')[0]
-    try:
-        pre = joblib.load(f'{dir}/{file}.joblib')
-        return pre
     except Exception as e:
         return None
 
