@@ -8,13 +8,13 @@ from src.strategy.model import Model
 class Agent:
     def __init__(self,
                  input_dim,
-                 lr,
-                 gamma,
-                 gae_lambda,
-                 clip_epsilon,
-                 value_loss_coef,
-                 entropy_loss_coef,
-                 device):
+                 lr = 0.0001,
+                 gamma = 0.99,
+                 gae_lambda = 0.95,
+                 clip_epsilon = 0.2,
+                 value_loss_coef = 0.5,
+                 entropy_loss_coef = 0.01,
+                 device = 'cpu'):
         self.gamma = gamma
         self.gae_lambda = gae_lambda
         self.clip_epsilon = clip_epsilon

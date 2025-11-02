@@ -5,6 +5,8 @@ class Buffer:
         self.states = [] # done(ig?)
         self.actions = [] # done
         self.log_probs = [] # done
+        self.values = []
+        self.entropies = []
         self.advantages = [] # done
         self.returns = [] # done
         self.dones = [] # done

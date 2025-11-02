@@ -1,22 +1,19 @@
 import torch
 import numpy as np
 
+from src.utils import get_config
+
+config = get_config.read_yaml()
+num_assets = len(config["symbols"]) + 1
+
 class Environment:
 
-    def __init__(self, n_assets, seq_len, input_dim):
+    def __init__(self, seq_len, input_dim, n_assets=num_assets):
         self.n_assets = n_assets
         self.seq_len = seq_len
         self.input_dim = input_dim
         self.current_step = 0
 
-        # Your context: 4 years of 1-hour data
-        self.total_steps = 35000
-        print("Initializing Placeholder Trading Environment...")
-
-        # Simulate loading data and calculating features
-        # In your real code, you'd load your processed data here
-        # This dummy data has shape (TotalSteps, NumFeatures * NumAssets)
-        # We use n_assets-1 (9) for the input features
         n_input_assets = n_assets - 1
         n_features = input_dim // n_input_assets
 
@@ -104,3 +101,6 @@ class Environment:
             print(f"Env Step: {self.current_step}/{self.total_steps} | Portfolio: ${self.portfolio_value:.2f}")
 
         return next_state, reward, done, {}
+
+    def get_reward(self, fiducia, next_state):
+        pass

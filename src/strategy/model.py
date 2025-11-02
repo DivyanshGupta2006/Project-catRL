@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.distributions import Normal
-from torch.nn.functional import softplus, softmax
-from src.strategy.buffer import Buffer
 
+from src.strategy.buffer import Buffer
 from src.utils import get_config
 
 config = get_config.read_yaml()
@@ -31,10 +30,12 @@ class Model(nn.Module):
 
         self.actor_head = nn.Sequential(
             nn.Linear(self.lstm_hidden_dim, self.actor_hidden_dim),
+            nn.ReLU(),
             nn.Linear(self.actor_hidden_dim, n_assets * 2))
 
         self.critic_head = nn.Sequential(
             nn.Linear(self.lstm_hidden_dim, self.critic_hidden_dim),
+            nn.ReLU(),
             nn.Linear(self.critic_hidden_dim, 1))
 
     def init_hidden_state(self, batch_size=1, device='cpu'):
@@ -53,65 +54,30 @@ class Model(nn.Module):
 
         means, log_std = torch.chunk(actor_out, 2, dim=-1)
 
-        log_std = torch.clamp(log_std, -20, 4)
+        log_std = torch.clamp(log_std, -10, 4)
         stds = torch.exp(log_std)
         dist = Normal(means, stds)
 
-        return dist, value, hidden_state_out
+        return dist, value
 
-    def get_action_and_value(self,
-                             x,
-                             hidden_state=None,
-                             action=None,
-                             buffer = None):
-        dist, value, hidden_state_out = self.forward(x, hidden_state)
+    def get_prediction(self,
+                       x,
+                       hidden_state=None,
+                       buffer=None):
         if buffer is None:
             buffer = Buffer()
         buffer.states = x.tolist()
-        if action is None:
-            action = dist.sample()
-            buffer.actions = action.tolist()
+
+        dist, value = self.forward(x, hidden_state)
+        buffer.values = value.tolist()
+
+        action = dist.sample()
+        buffer.actions = action.tolist()
+
         log_prob = dist.log_prob(action).sum(dim=-1)
         buffer.log_probs = log_prob
+
         entropy = dist.entropy().sum(dim=-1)
+        buffer.entropies = entropy.tolist()
 
-        return action, log_prob, entropy, value, hidden_state_out, buffer
-
-    @staticmethod
-    def get_fiduciae(actor_out):
-        actor_out = actor_out.squeeze()
-
-        fiduciae = torch.zeros_like(actor_out)
-
-        # Separate crypto and cash actor_out
-        crypto_actor_out = actor_out[:-1]  # First 9 elements
-        cash_logit = actor_out[-1]  # Last element
-
-        processed_cash_logit = softplus(cash_logit).unsqueeze(0)  # Shape [1]
-
-        #Long Book
-        long_mask = crypto_actor_out >= 0
-        long_indices = long_mask.nonzero(as_tuple=True)[0]
-        long_crypto_actor_out = crypto_actor_out[long_mask]
-
-        long_book_actor_out = torch.cat([long_crypto_actor_out, processed_cash_logit])
-
-        long_book_fiduciae = softmax(long_book_actor_out, dim=0)
-
-        fiduciae[long_indices] = long_book_fiduciae[:-1]
-        fiduciae[-1] = long_book_fiduciae[-1]
-
-        #Short Book
-        short_mask = crypto_actor_out < 0
-        short_indices = short_mask.nonzero(as_tuple=True)[0]
-        short_crypto_actor_out = crypto_actor_out[short_mask]
-
-        if short_crypto_actor_out.numel() > 0:
-            abs_short_actor_out = torch.abs(short_crypto_actor_out)
-
-            short_book_fiduciae_abs = softmax(abs_short_actor_out, dim=0)
-
-            fiduciae[short_indices] = -short_book_fiduciae_abs
-
-        return fiduciae
-
+        return buffer
