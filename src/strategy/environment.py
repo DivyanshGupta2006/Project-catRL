@@ -4,103 +4,127 @@ import numpy as np
 from src.utils import get_config
 
 config = get_config.read_yaml()
-num_assets = len(config["symbols"]) + 1
+num_assets = len(config["data"]["symbols"]) + 1
 
 class Environment:
-
-    def __init__(self, seq_len, input_dim, n_assets=num_assets):
-        self.n_assets = n_assets
-        self.seq_len = seq_len
-        self.input_dim = input_dim
-        self.current_step = 0
-
-        n_input_assets = n_assets - 1
-        n_features = input_dim // n_input_assets
-
-        print(f"Env Setup: {n_assets} total assets ({n_input_assets} cryptos + 1 cash)")
-        print(f"Env Setup: {n_features} features per crypto asset")
-        print(f"Env Setup: {input_dim} total input features")
-
-        # This self.full_state_data simulates your preprocessed data file
-        self.full_state_data = torch.randn(self.total_steps, self.input_dim)
-
-        # Simulate portfolio value
-        self.portfolio_value = 10000.0  # Initial portfolio
-
-    def _get_state(self):
+    def __init__(self, data):
         """
-        Gets the state for the current time step.
-        The state is a window of the last `seq_len` observations.
-        """
-        if self.current_step < self.seq_len:
-            # Not enough history, pad with zeros
-            state = torch.zeros(self.seq_len, self.input_dim)
-            state[self.seq_len - self.current_step:] = self.full_state_data[:self.current_step]
-        else:
-            state = self.full_state_data[self.current_step - self.seq_len: self.current_step]
+        Initializes the environment.
 
-        # Add a batch dimension for the model
-        return state.unsqueeze(0)  # Shape: (1, seq_len, input_dim)
+        Args:
+            data (np.array): The full dataset (e.g., shape [N_steps, 126]).
+                                         This data should be pre-normalized.
+        """
+        super(Environment, self).__init__()
+
+        self.data = data
+        self.max_steps = len(self.data) - 1  # Total steps in the data
+
+        # Initialize state-tracking variables
+        self.current_index = 0
+
+        # --- Environment Configuration ---
+        # These must match your model's dimensions
+
+        # The observation is one row of your data
+        self.observation_space_dim = 126
+
+        # *** TODO: MUST BE MODIFIED BY YOU ***
+        # This is an EXAMPLE.
+        # 0 = Hold, 1 = Buy, 2 = Sell
+        # If you have a different action scheme, change this.
+        self.action_space_dim = 3
+
+        print(f"Environment initialized with {self.max_steps + 1} timesteps.")
+
+    def _calculate_reward(self, action):
+        """
+        Calculates the reward for taking a given action at the current timestep.
+
+        This is the **CORE LOGIC** of your environment and is entirely
+        dependent on your specific problem (e.g., trading, forecasting).
+
+        --- *** TODO: REPLACE THIS WITH YOUR LOGIC *** ---
+
+        Args:
+            action (int): The action taken by the agent (e.g., 0, 1, or 2).
+
+        Returns:
+            float: The calculated reward.
+        """
+
+        # EXAMPLE LOGIC: TRADING
+        # Let's assume:
+        # - self.data[self.current_index][0] is the current price.
+        # - self.data[self.current_index + 1][0] is the next day's price.
+        # - Action 0: Hold (no reward)
+        # - Action 1: Buy (reward is profit/loss from holding for one day)
+        # - Action 2: Sell (reward is profit/loss from shorting for one day)
+
+        reward = 0.0
+
+        # Ensure we don't look past the end of the data
+        if self.current_index >= self.max_steps:
+            return 0.0
+
+        price_now = self.data[self.current_index, 0]
+        price_next = self.data[self.current_index + 1, 0]
+        price_change = price_next - price_now
+
+        if action == 1:  # Buy
+            reward = price_change
+        elif action == 2:  # Sell (Short)
+            reward = -price_change
+        # elif action == 0: # Hold
+        #    reward = 0.0 # Or maybe a small penalty
+
+        return reward
+        # --- *** END OF EXAMPLE LOGIC *** ---
 
     def reset(self):
         """
-        Resets the environment and returns the initial state.
-        State should be a torch tensor of shape (1, seq_len, input_dim)
-        """
-        print("Environment reset.")
-        self.current_step = 0
-        self.portfolio_value = 10000.0
-        return self._get_state()
-
-    def step(self, portfolio_weights):
-        """
-        Takes an action (portfolio_weights) and returns the next state,
-        reward, done, and info.
-
-        Args:
-            portfolio_weights (torch.Tensor): 
-                Shape (10,) -> 9 assets + 1 cash
+        Resets the environment to the beginning of the time-series.
 
         Returns:
-            next_state (torch.Tensor): Shape (1, seq_len, input_dim)
-            reward (float): The reward (P_t - P_t-1)
-            done (bool): True if the episode is over
-            info (dict): {}
+            np.array: The first observation (shape [126]).
         """
-        if self.current_step >= self.total_steps - 1:
-            # End of data
-            self.current_step += 1
-            return self._get_state(), 0, True, {}
+        # Reset the index to the start
+        self.current_index = 0
+        obs = self.data[self.current_index].copy()
 
-        # --- Simulate portfolio value change ---
-        # This is where your backtester logic would go.
-        # For this placeholder, we'll simulate a reward.
-        prev_portfolio_value = self.portfolio_value
+        return obs
 
-        # Simulate market movement - biased towards positive for "progress"
-        # and tied to how much is *not* in cash (risk-on)
-        cash_weight = portfolio_weights[-1].item()
-        risk_on_weight = 1.0 - cash_weight
-        market_return = (np.random.rand() * 0.02 - 0.008)  # -0.8% to +1.2%
-        reward = (market_return * risk_on_weight) * self.portfolio_value
+    def step(self, action):
+        """
+        Advances the environment by one timestep.
 
-        # Your reward function
-        # reward = P_t - P_t-1
-        self.portfolio_value += reward
+        Args:
+            action (int): The action chosen by the agent.
 
-        # Move to the next time step
-        self.current_step += 1
+        Returns:
+            tuple: A 4-item tuple (next_observation, reward, done, info)
+        """
 
-        # Get the next state
-        next_state = self._get_state()
+        # 1. Calculate reward based on the action at the *current* step
+        reward = self._calculate_reward(action)
 
-        # Check if done
-        done = self.current_step >= self.total_steps - 1
+        # 2. Move time forward
+        self.current_index += 1
 
-        if self.current_step % 1000 == 0:
-            print(f"Env Step: {self.current_step}/{self.total_steps} | Portfolio: ${self.portfolio_value:.2f}")
+        # 3. Check if the episode is "done" (i.e., we ran out of data)
+        # This is a TERMINATION, not a truncation.
+        done = (self.current_index >= self.max_steps)
 
-        return next_state, reward, done, {}
+        # 4. Get the next observation
+        if done:
+            # If done, we can just return the last observation again
+            # or a set of zeros. Returning the last one is fine.
+            next_obs = self.data[self.max_steps].copy()
+        else:
+            next_obs = self.data[self.current_index].copy()
 
-    def get_reward(self, fiducia, next_state):
-        pass
+        # 5. Return the standard tuple
+        # 'info' dictionary is typically empty in simple envs
+        info_dict = {}
+
+        return next_obs, reward, done, info_dict

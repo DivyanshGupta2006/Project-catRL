@@ -93,3 +93,6 @@ class Agent:
                 total_loss.backward()
                 nn.utils.clip_grad_norm_(self.model.parameters(), 0.5)  # Gradient clipping
                 self.optimizer.step()
+
+    def rollout(self):
+        pass

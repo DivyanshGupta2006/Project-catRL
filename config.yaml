@@ -66,4 +66,4 @@ hyperparameters:
   batch_size: 128
   num_epochs: 50
   learning_rate: 0.001
-  window_size: 72
+  seq_len: 72
