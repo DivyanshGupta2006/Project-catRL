@@ -14,8 +14,8 @@ class Agent:
                  device,
                  model_path):
 
-        self.model = model
         self.device = device
+        self.model = model.to(self.device)
 
         self.gamma = gamma
         self.gae_lambda = gae_lambda
@@ -39,6 +39,34 @@ class Agent:
         entropy = dist.entropy().sum(dim=-1)
         buffer.entropies = entropy.tolist()
         return buffer
+
+    def _compute_gae(self, buffer, next_value, next_done):
+        rewards = torch.tensor(buffer.rewards, dtype=torch.float32).to(self.device)
+        values = torch.tensor(buffer.values, dtype=torch.float32).to(self.device)
+        dones = torch.tensor(buffer.dones, dtype=torch.float32).to(self.device)
+
+        T = len(rewards)
+        advantages = torch.zeros_like(rewards).to(self.device)
+
+        last_gae_lam = 0
+
+        all_values = torch.cat([values, next_value.unsqueeze(0)], dim=0)
+        all_dones = torch.cat([dones, next_done.unsqueeze(0)], dim=0)
+
+        for t in reversed(range(T)):
+            value_t = all_values[t]
+            value_t_plus_1 = all_values[t + 1]
+            next_non_terminal = 1.0 - all_dones[t + 1]
+
+            delta = rewards[t] + self.gamma * value_t_plus_1 * next_non_terminal - value_t
+
+            advantages[t] = last_gae_lam = delta + self.gamma * self.gae_lambda * last_gae_lam * next_non_terminal
+
+        returns = advantages + values
+
+        buffer.advantages = advantages.cpu().numpy().tolist()
+        buffer.returns = returns.cpu().numpy().tolist()
+
 
     def update(self, buffer):
         # Get all data from the buffer as flat tensors
@@ -127,4 +155,18 @@ class Agent:
         }
 
     def save(self):
-        pass
+        print("Saving the model...")
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+        }, self.model_path)
+
+    def load(self):
+        print("Loading the model...")
+        try:
+            checkpoint = torch.load(self.model_path, map_location=self.device)
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.model.to(self.device)
+        except Exception as e:
+            print(f"--- Error loading models: {e} ---")
