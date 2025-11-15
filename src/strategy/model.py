@@ -2,28 +2,25 @@ import torch
 import torch.nn as nn
 from torch.distributions import Normal
 
-from src.strategy.buffer import Buffer
-from src.utils import get_config
-
-config = get_config.read_yaml()
-num_assets = len(config['data']['symbols']) + 1
-
-
 class Model(nn.Module):
     def __init__(self,
                  input_dim,
-                 n_assets=num_assets):
+                 lstm_hidden_dim,
+                 n_assets,
+                 n_lstm_layers,
+                 actor_hidden_dim,
+                 critic_hidden_dim):
         super(Model, self).__init__()
 
         self.input_dim = input_dim
-        self.lstm_hidden_dim = config['hyperparameters']['hidden_state_dim']
+        self.lstm_hidden_dim = lstm_hidden_dim
         self.n_assets = n_assets
-        self.n_lstm_layers = config['hyperparameters']['num_lstm_layers']
-        self.actor_hidden_dim = config['hyperparameters']['actor_hidden_dim']
-        self.critic_hidden_dim = config['hyperparameters']['critic_hidden_dim']
+        self.n_lstm_layers = n_lstm_layers
+        self.actor_hidden_dim = actor_hidden_dim
+        self.critic_hidden_dim = critic_hidden_dim
 
         self.lstm = nn.LSTM(
-            input_size=input_dim,
+            input_size=self.input_dim,
             hidden_size=self.lstm_hidden_dim,
             num_layers=self.n_lstm_layers,
             batch_first=True)
@@ -31,7 +28,7 @@ class Model(nn.Module):
         self.actor_head = nn.Sequential(
             nn.Linear(self.lstm_hidden_dim, self.actor_hidden_dim),
             nn.ReLU(),
-            nn.Linear(self.actor_hidden_dim, n_assets * 2))
+            nn.Linear(self.actor_hidden_dim, self.n_assets * 2))
 
         self.critic_head = nn.Sequential(
             nn.Linear(self.lstm_hidden_dim, self.critic_hidden_dim),
@@ -59,25 +56,3 @@ class Model(nn.Module):
         dist = Normal(means, stds)
 
         return dist, value
-
-    def get_prediction(self,
-                       x,
-                       hidden_state=None,
-                       buffer=None):
-        if buffer is None:
-            buffer = Buffer()
-        buffer.states = x.tolist()
-
-        dist, value = self.forward(x, hidden_state)
-        buffer.values = value.tolist()
-
-        action = dist.sample()
-        buffer.actions = action.tolist()
-
-        log_prob = dist.log_prob(action).sum(dim=-1)
-        buffer.log_probs = log_prob
-
-        entropy = dist.entropy().sum(dim=-1)
-        buffer.entropies = entropy.tolist()
-
-        return buffer
