@@ -54,6 +54,8 @@ strategy:
   transaction_cost_fraction : 0.001
 
 hyperparameters:
+  num_assets: 10
+  input_dim: 126
   num_lstm_layers: 1
   hidden_state_dim: 256
   actor_hidden_dim: 64
@@ -63,7 +65,8 @@ hyperparameters:
   clip_epsilon: 0.2
   value_loss_coef: 0.5
   entropy_loss_coef: 0.01
-  batch_size: 128
-  num_epochs: 50
-  learning_rate: 0.001
   seq_len: 72
+  batch_size: 128
+  rollout_size: 4096
+  num_epochs: 10
+  learning_rate: 0.001
