@@ -107,69 +107,30 @@ class Environment:
             tuple: (next_observation, reward, done, info)
         """
 
-        # --- 1. GET CURRENT STATE (Time t) ---
-        state_t = read_file.read_state()
-        t = state_t['timestep']
+        # get the current timestep
 
-        # Get the raw data row for time t
-        row_t = self.data.loc[self.data.index[t]]
+        # get the row from merged_training_data
 
-        # Convert row to the 'candle' dict format
-        candle_t = self._row_to_candle_dict(row_t)
+        # execute SL, TP
 
-        # --- 2. EXECUTE PRE-TRADE LOGIC ---
-        # Execute any stop-loss / take-profit orders from *previous* step
-        execute_SL_TP.execute(candle_t)
+        # metrics
 
-        # Calculate portfolio value *before* new trades
-        value_t = portfolio_calculator.calculate(candle_t)
+        # portfolio size
 
-        # --- 3. APPLY AGENT'S ACTION (Time t) ---
-        # Assign the agent's action (fiduciae) to the candle
-        candle_t = self._assign_fiduciae(candle_t, fiduciae_action)
+        # get order price using slippage
 
-        # --- 4. EXECUTE TRADING LOGIC (Time t) ---
-        # Run the full backtesting pipeline using the agent's fiduciae
-        candle_t = slippage.get_order_price(candle_t, value_t)
-        candle_t = amount_calculator.calculate(candle_t, value_t)
-        candle_t = stop_loss.get_stop_loss(candle_t)
-        candle_t = take_profit.get_take_profit(candle_t)
+        # amount calculator
 
-        order = place_order.place(candle_t)
+        # stop loss, take profit calculate
 
-        # This function updates portfolio.csv and state.json (cash)
-        execute_order.execute(order)
+        # order metrics
 
-        # --- 5. ADVANCE TIME & GET REWARD (Time t+1) ---
-        # Manually advance the timestep in state.json
-        state_t['timestep'] += 1
-        update_state.update(state_t)
+        # calculate reward
 
-        t_plus_1 = state_t['timestep']
+        # pick up required data from merged data
 
-        # Check if the episode is done
-        done = (t_plus_1 >= self.max_steps)
+        # normalize to prepare next_obs
 
-        # Get the index for the next observation
-        # If done, we just use the last available step
-        next_obs_index = self.max_steps - 1 if done else t_plus_1
-
-        # Get the raw data row for time t+1
-        row_t_plus_1 = self.data.loc[self.data.index[next_obs_index]]
-
-        # Convert to candle dict to calculate the new portfolio value
-        candle_t_plus_1 = self._row_to_candle_dict(row_t_plus_1)
-
-        # Calculate the new portfolio value at time t+1
-        value_t_plus_1 = portfolio_calculator.calculate(candle_t_plus_1)
-
-        # --- 6. CALCULATE REWARD ---
-        # The reward is the change in portfolio value
-        reward = value_t_plus_1 - value_t
-
-        # Get the next observation to return to the agent
-        next_obs = row_t_plus_1.to_numpy()
-
-        info_dict = {}  # Placeholder for extra info
+        # info_dict
 
         return next_obs, reward, done, info_dict
