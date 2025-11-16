@@ -66,7 +66,7 @@ hyperparameters:
   value_loss_coef: 0.5
   entropy_loss_coef: 0.01
   seq_len: 72
-  batch_size: 128
+  mini_batch_size: 128
   rollout_size: 4096
   num_epochs: 10
   learning_rate: 0.001
