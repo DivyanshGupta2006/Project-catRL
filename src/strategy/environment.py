@@ -5,7 +5,7 @@ import ast
 from src.utils import get_config, read_file
 from src.update_files import update_state, update_portfolio
 
-from src.backtester import execute_SL_TP, place_order, execute_order
+from src.backtester import execute_SL_TP, place_order, execute_order, calculate_metrics
 from src.position_sizing import portfolio_calculator, amount_calculator
 from src.risk_management import slippage, stop_loss, take_profit
 
@@ -15,7 +15,7 @@ NUM_ASSETS = len(config['data']['symbols']) + 1  # 9 cryptos + 1 cash
 
 class Environment:
 
-    def __init__(self, data):
+    def __init__(self, data, training = False):
         """
         Initializes the environment.
 
@@ -25,6 +25,10 @@ class Environment:
         """
         # super(Environment, self).__init__()
 
+
+        self.training = training
+
+        self.timestep = 0       # reset to appropriate in reset
         self.data = data
         self.max_steps = len(self.data) - 1
 
@@ -95,7 +99,7 @@ class Environment:
 
         return obs
 
-    def step(self, fiduciae_action):
+    def step(self, fiduciae_action, buffer):
         """
         Advances the environment by one timestep using the agent's action.
 
@@ -107,25 +111,57 @@ class Environment:
             tuple: (next_observation, reward, done, info)
         """
 
-        # get the current timestep
+        # get the current timestep and get row from merged_training_data
 
-        # get the row from merged_training_data
+        state = read_file.read_state()
+        row = self.data.loc[self.data.index[state['timestep']]].copy()
+        state['timestep'] += 1
+        self.timestep += 1
+        update_state.update(state)
+
+        row.index = row.index.map(ast.literal_eval)
+        candle_df = row.unstack(level=0)
+        candle = candle_df.to_dict(orient='index')
 
         # execute SL, TP
 
+        execute_SL_TP.execute(candle)
+
         # metrics
+
+        if not self.training:
+            calculate_metrics.calculate_candle_metrics(candle)
 
         # portfolio size
 
+        Pt_old = portfolio_calculator.calculate(candle)
+
+        # add fiduciae to candle
+
+        candle = self._assign_fiduciae(candle, fiduciae_action)
+
         # get order price using slippage
+
+        candle = slippage.get_order_price(candle, Pt)
 
         # amount calculator
 
+        candle = amount_calculator.calculate(candle)
+
         # stop loss, take profit calculate
 
-        # order metrics
+        candle = stop_loss.get_stop_loss(candle)
+        candle = take_profit.get_take_profit(candle)
+
+        # order_dict, execute order, order metrics
+
+        order = place_order.place(candle)
+        execute_order.execute(order)
+        calculate_metrics.calculate_order_metrics(order)
 
         # calculate reward
+
+        reward =
 
         # pick up required data from merged data
 

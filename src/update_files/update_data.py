@@ -7,12 +7,19 @@ def update():
     split_data.split()
     link_data.link('training-val')
     link_data.link('val-test')
+    
     feature_engineer.create_features(type='training')
     feature_engineer.create_features(type='val')
     feature_engineer.create_features(type='test')
-    preprocess_data.preprocess(type='training', to_normalize=False)
-    preprocess_data.preprocess(type='val', to_normalize=False)
-    preprocess_data.preprocess(type='test', to_normalize=False)
-    merge_data.merge(type='training')
-    merge_data.merge(type='val')
-    merge_data.merge(type='test')
+    
+    preprocess_data.preprocess(type='training', to_normalize=True)
+    preprocess_data.preprocess(type='val', to_normalize=True)
+    preprocess_data.preprocess(type='test', to_normalize=True)
+
+    merge_data.merge_normalized(type='training')
+    merge_data.merge_normalized(type='val')
+    merge_data.merge_normalized(type='test')
+
+    merge_data.merge_unnormalized(type='test')
+    merge_data.merge_unnormalized(type='val')
+    merge_data.merge_unnormalized(type='training')
