@@ -32,7 +32,7 @@ def train():
     LEARNING_RATE = hp['learning_rate']
     NUM_EPOCHS = hp['num_epochs']
     ROLLOUT_SIZE = hp['rollout_size']
-    BATCH_SIZE = hp['batch_size']
+    BATCH_SIZE = hp['mini_batch_size']
     SEQUENCE_LENGTH = hp['seq_len']
     train_data = read_file.read_merged_training_data()
 
