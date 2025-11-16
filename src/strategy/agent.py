@@ -15,7 +15,8 @@ class Agent:
                  entropy_loss_coef,
                  learning_rate,
                  device,
-                 model_path):
+                 model_path,
+                 mb_size):
 
         self.device = device
         self.model = model.to(self.device)
@@ -27,6 +28,7 @@ class Agent:
         self.entropy_loss_coef = entropy_loss_coef
         self.learning_rate = learning_rate
         self.model_path = model_path
+        self.mb_size = mb_size
 
         self.optimizer = Adam(model.parameters(), lr=learning_rate)
         self.value_loss_fn = nn.MSELoss()
@@ -47,7 +49,7 @@ class Agent:
         entropies = dist.entropy().sum(dim=-1)
         return new_log_prob, new_values, entropies
 
-    def _compute_gae(self, buffer, next_value, next_done):
+    def compute_gae(self, buffer, next_value, next_done):
         rewards = torch.tensor(buffer.rewards, dtype=torch.float32).to(self.device)
         values = torch.tensor(buffer.values, dtype=torch.float32).to(self.device)
         dones = torch.tensor(buffer.dones, dtype=torch.float32).to(self.device)
@@ -74,10 +76,12 @@ class Agent:
         buffer.advantages = advantages.cpu().numpy().tolist()
         buffer.returns = returns.cpu().numpy().tolist()
 
+        return buffer
+
 
     def update(self, buffer, start):
         # Gather the hyperparameters
-        mb_size = config['hyperparameters']['mini_batch_size']
+        mb_size = self.mb_size
 
         states = torch.tensor(buffer.states[start:start+mb_size], dtype=torch.float32).to(self.device)
         actions = torch.tensor(buffer.actions[start:start+mb_size], dtype=torch.float32).to(self.device)
@@ -102,9 +106,9 @@ class Agent:
         policy_loss = torch.min(surr1,surr2).mean()
         entropy_loss = entropies.mean()
 
-        total_loss = self.value_loss_coef*value_loss - policy_loss - self.entropy_loss_coef*entropy_loss
+        total_loss = self.value_loss_coef*value_loss - policy_loss - self.entropy_loss_coef * entropy_loss
 
-        # Backpropogate the loss
+        # Backpropagate the loss
         self.optimizer.zero_grad()
         total_loss.backward()
         self.optimizer.step()

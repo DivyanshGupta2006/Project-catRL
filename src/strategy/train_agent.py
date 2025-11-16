@@ -6,6 +6,7 @@ from src.strategy.model import Model
 from src.strategy.agent import Agent
 from src.strategy.buffer import Buffer
 from src.utils import get_config, read_file
+from src.position_sizing import fiducia_calculator
 
 config = get_config.read_yaml()
 
@@ -57,15 +58,31 @@ def train():
                       SEQUENCE_LENGTH)
 
     buffer = Buffer()
+    buffer.states.append(train_data[0:SEQUENCE_LENGTH])
 
-    for rollout in range((len(train_data)) / ROLLOUT_SIZE):
+    env.reset()
+
+    for rollout in range((len(train_data)) // ROLLOUT_SIZE):
+        for step in range(ROLLOUT_SIZE):
+            buffer = agent.get_action_and_value(buffer)
+            fiduciae = fiducia_calculator.calculate(buffer.actions[-1])
+            buffer, timestep = env.step(fiduciae, buffer)
+            buffer = agent.compute_gae(buffer)      # next value, next done ?
+
+        indices = np.arange(ROLLOUT_SIZE)  # Create indices 0...ROLLOUT_SIZE-1
+
         for epoch in range(NUM_EPOCHS):
-            for mini_batch in range(ROLLOUT_SIZE / BATCH_SIZE):
-                for sequence in range(BATCH_SIZE):
-                    buffer = agent.get_action_and_value(buffer)
-                    env.step(buffer)
-                agent.update(buffer)
-                buffer.clear()
+            np.random.shuffle(indices)  # Shuffle indices
+
+            for start in range(0, ROLLOUT_SIZE, BATCH_SIZE):
+                end = start + BATCH_SIZE
+                mb_indices = indices[start:end]  # Get mini-batch indices
+
+                # Get the mini-batch data using shuffled indices
+                agent.update(
+                    buffer, start
+                )
+
 
     agent.save()
     print_backtesting_results.print_results()

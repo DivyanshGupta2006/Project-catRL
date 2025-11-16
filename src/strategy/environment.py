@@ -9,51 +9,18 @@ from src.backtester import execute_SL_TP, place_order, execute_order, calculate_
 from src.position_sizing import portfolio_calculator, amount_calculator
 from src.risk_management import slippage, stop_loss, take_profit
 
-config = get_config.read_yaml()
-NUM_ASSETS = len(config['data']['symbols']) + 1  # 9 cryptos + 1 cash
-
-
 class Environment:
 
-    def __init__(self, data, training = False):
-        """
-        Initializes the environment.
+    def __init__(self, train_data, sequence_length, num_assets):
+        self.train_data = train_data
+        self.sequence_length = sequence_length
+        self.num_assets = num_assets
+        self.config = get_config.read_yaml()
+        self.portfolio_value = 0
 
-        Args:
-            data (pd.DataFrame): The full, merged, and preprocessed
-                                             time-series data.
-        """
-        # super(Environment, self).__init__()
-
-
-        self.training = training
-
-        self.timestep = 0       # reset to appropriate in reset
-        self.data = data
-        self.max_steps = len(self.data) - 1
-
-        # --- Environment Configuration ---
-        self.action_space_dim = NUM_ASSETS  # 10 (9 cryptos + 1 cash)
-        self.observation_space_dim = len(self.data.columns)  # 126
-
-        # --- Helper attributes from config ---
-        self.config = config
-        self.symbols = self.config['data']['symbols']
-        # Get 'ETH' from 'ETH/USDT'
-        self.crypto_symbols = [s.split('/')[0] for s in self.symbols]
-
-        print(f"Environment initialized with {self.max_steps + 1} timesteps.")
-        print(f"Observation space dim: {self.observation_space_dim}")
-        print(f"Action space dim: {self.action_space_dim}")
+        self.current_step = 0
 
     def _row_to_candle_dict(self, row):
-        """
-        Converts a single row from the merged DataFrame into the
-        'candle' dictionary format required by the backtester scripts.
-        This mimics the logic from 'data_handler.py'.
-        """
-        # The DataFrame's columns are string-represented tuples, e.g., "('close', 'ETH')"
-        # We must convert them to actual tuples to unstack.
         try:
             row.index = row.index.map(ast.literal_eval)
         except ValueError:
@@ -65,10 +32,6 @@ class Environment:
         return candle
 
     def _assign_fiduciae(self, candle, fiduciae_action):
-        """
-        Assigns the agent's action (fiduciae vector) to the candle dict.
-        This replaces the 'predict_position.py' script.
-        """
         # fiduciae_action is a [10,] array
         # First 9 are for cryptos, 10th is for cash
         for i, symbol in enumerate(self.crypto_symbols):
@@ -76,17 +39,9 @@ class Environment:
                 # Assign the fiduciae (weight) for this crypto
                 candle[symbol]['fiducia'] = fiduciae_action[i]
 
-        # Note: The 10th action (cash fiducia) is implicitly handled
-        # by the position sizing and order execution logic.
         return candle
 
     def reset(self):
-        """
-        Resets the environment state to the very beginning.
-        - Resets the state.json (timestep=0, cash=initial)
-        - Resets the portfolio.csv (all assets=0)
-        - Returns the first observation.
-        """
         # Set state.json to timestep 0 and initial capital
         update_state.set_state(self.config['strategy']['capital'])
 
@@ -100,18 +55,6 @@ class Environment:
         return obs
 
     def step(self, fiduciae_action, buffer):
-        """
-        Advances the environment by one timestep using the agent's action.
-
-        Args:
-            fiduciae_action (np.array): The vector of 10 continuous actions
-                                        (fiduciae/weights) from the agent.
-
-        Returns:
-            tuple: (next_observation, reward, done, info)
-        """
-
-        # get the current timestep and get row from merged_training_data
 
         state = read_file.read_state()
         row = self.data.loc[self.data.index[state['timestep']]].copy()
@@ -119,54 +62,50 @@ class Environment:
         self.timestep += 1
         update_state.update(state)
 
-        row.index = row.index.map(ast.literal_eval)
-        candle_df = row.unstack(level=0)
-        candle = candle_df.to_dict(orient='index')
+        candle = self._row_to_candle_dict(row)
 
-        # execute SL, TP
+        # not execute SL, TP here, rather execute it at the end of the last step -> simulate the next one hour after taking action
+        # to get the final portfolio value : which will be used in reward
 
-        execute_SL_TP.execute(candle)
-
-        # metrics
-
-        if not self.training:
-            calculate_metrics.calculate_candle_metrics(candle)
-
-        # portfolio size
-
-        Pt_old = portfolio_calculator.calculate(candle)
-
-        # add fiduciae to candle
+        Pt = portfolio_calculator.calculate(candle)
 
         candle = self._assign_fiduciae(candle, fiduciae_action)
 
-        # get order price using slippage
-
         candle = slippage.get_order_price(candle, Pt)
 
-        # amount calculator
-
-        candle = amount_calculator.calculate(candle)
-
-        # stop loss, take profit calculate
+        candle = amount_calculator.calculate(candle, Pt)
 
         candle = stop_loss.get_stop_loss(candle)
         candle = take_profit.get_take_profit(candle)
-
-        # order_dict, execute order, order metrics
 
         order = place_order.place(candle)
         execute_order.execute(order)
         calculate_metrics.calculate_order_metrics(order)
 
-        # calculate reward
+        Pt_beg = portfolio_calculator.calculate(candle)
 
-        reward =
+        done = (state['timestep'] >= len(self.data) - 1)
 
-        # pick up required data from merged data
+        if not done:
+            next_row = self.data.loc[self.data.index[state['timestep']]].copy()
+            next_candle = self._row_to_candle_dict(next_row)
+            execute_SL_TP.execute(next_candle)
+            Pt_end = portfolio_calculator.calculate(next_candle)
 
-        # normalize to prepare next_obs
+        reward = (Pt_end - Pt_beg) / (Pt_beg + 1e-8)
 
-        # info_dict
+        info_dict = {'reward': reward, 'profit': (Pt_end - Pt_beg)}
 
-        return next_obs, reward, done, info_dict
+        buffer.states.append(self.train_data.loc[self.timestep : self.timestep + self.sequence_length - 1])
+        buffer.rewards.append(reward)
+        buffer.dones.append(done)
+
+        return self.timestep, buffer
+
+    # i look at data for t-72 -> t-1 steps, i am at end of (t - 1)'th step (72 being my sequence length for LSTM)
+    # then gives action for this step, i will execute this action at the start of t'th step
+    # but its reward will only be known at the end of this t'th steo - since P_new in reward is the new portfolio value - indicative of the wisdom in the model's decisions
+    # this P_new is the portfolio value after executing SL, TP at end of t'th step, P_old is portfolio value after investing using these these fiducia
+    # but i want to give the reward now, not wait for the next step
+    # here also i update using the (t - 1)'th step only, no looking at the t'th step (to prevent look-ahead bias)
+    # so for the purpose of training the model, and providing it with reward, let me execute the SL, TP for the next candle, and then calculate the P_new

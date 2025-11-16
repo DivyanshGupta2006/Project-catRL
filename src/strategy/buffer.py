@@ -11,7 +11,7 @@ class Buffer:
         self.returns = []
         self.dones = []
 
-    def append_data(self, state, action, log_prob, value, reward, entropy, advantage, _return, done):
+    def append_data(self, state, action, log_prob, value, reward, advantage, _return, done):
         self.states.append(state)
         self.actions.append(action)
         self.log_probs.append(log_prob)
