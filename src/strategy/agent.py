@@ -14,9 +14,9 @@ class Agent:
                  value_loss_coef,
                  entropy_loss_coef,
                  learning_rate,
+                 mini_batch_size,
                  device,
-                 model_path,
-                 mb_size):
+                 model_path):
 
         self.device = device
         self.model = model.to(self.device)
@@ -28,7 +28,7 @@ class Agent:
         self.entropy_loss_coef = entropy_loss_coef
         self.learning_rate = learning_rate
         self.model_path = model_path
-        self.mb_size = mb_size
+        self.mini_batch_size = mini_batch_size
 
         self.optimizer = Adam(model.parameters(), lr=learning_rate)
         self.value_loss_fn = nn.MSELoss()
@@ -80,14 +80,11 @@ class Agent:
 
 
     def update(self, buffer, start):
-        # Gather the hyperparameters
-        mb_size = self.mb_size
-
-        states = torch.tensor(buffer.states[start:start+mb_size], dtype=torch.float32).to(self.device)
-        actions = torch.tensor(buffer.actions[start:start+mb_size], dtype=torch.float32).to(self.device)
-        old_log_probs = torch.tensor(buffer.log_probs[start:start+mb_size], dtype=torch.float32).to(self.device)
-        advantages = torch.tensor(buffer.advantages[start:start+mb_size], dtype=torch.float32).to(self.device)
-        returns = torch.tensor(buffer.returns[start:start+mb_size], dtype=torch.float32).to(self.device)
+        states = torch.tensor(buffer.states[start:start+self.mini_batch_size], dtype=torch.float32).to(self.device)
+        actions = torch.tensor(buffer.actions[start:start+self.mini_batch_size], dtype=torch.float32).to(self.device)
+        old_log_probs = torch.tensor(buffer.log_probs[start:start+self.mini_batch_size], dtype=torch.float32).to(self.device)
+        advantages = torch.tensor(buffer.advantages[start:start+self.mini_batch_size], dtype=torch.float32).to(self.device)
+        returns = torch.tensor(buffer.returns[start:start+self.mini_batch_size], dtype=torch.float32).to(self.device)
 
         num_samples = len(states)
         if num_samples == 0:
@@ -95,10 +92,8 @@ class Agent:
 
         advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
 
-        # Compute the new model data with the current parameters
         new_log_probs, new_values, entropies = self.get_new_model_output(states,actions)
 
-        # Compute all losses
         value_loss = self.value_loss_fn(new_values, returns).mean()
         ratio = torch.exp(new_log_probs - old_log_probs)
         surr1 = ratio * advantages

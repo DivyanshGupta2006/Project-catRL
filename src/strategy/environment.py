@@ -1,8 +1,4 @@
-import numpy as np
-import pandas as pd
-import ast
-
-from src.utils import get_config, read_file
+from src.utils import get_config, read_file, convert
 from src.update_files import update_state, update_portfolio
 
 from src.backtester import execute_SL_TP, place_order, execute_order, calculate_metrics
@@ -12,24 +8,11 @@ from src.risk_management import slippage, stop_loss, take_profit
 class Environment:
 
     def __init__(self, train_data, sequence_length, num_assets):
-        self.train_data = train_data
+        self.data = train_data
         self.sequence_length = sequence_length
         self.num_assets = num_assets
         self.config = get_config.read_yaml()
-        self.portfolio_value = 0
-
         self.current_step = 0
-
-    def _row_to_candle_dict(self, row):
-        try:
-            row.index = row.index.map(ast.literal_eval)
-        except ValueError:
-            # If index is already evaluated, skip
-            pass
-
-        candle_df = row.unstack(level=0)
-        candle = candle_df.to_dict(orient='index')
-        return candle
 
     def _assign_fiduciae(self, candle, fiduciae_action):
         # fiduciae_action is a [10,] array
@@ -41,18 +24,10 @@ class Environment:
 
         return candle
 
-    def reset(self):
-        # Set state.json to timestep 0 and initial capital
+    def reset(self, current_step):
         update_state.set_state(self.config['strategy']['capital'])
-
-        # Set portfolio.csv to all zeros
         update_portfolio.set_portfolio()
-
-        # Get the very first observation (row 0)
-        # .loc is used because the index is a timestamp
-        obs = self.data.loc[self.data.index[0]].to_numpy()
-
-        return obs
+        self.current_step = current_step
 
     def step(self, fiduciae_action, buffer):
 
@@ -62,7 +37,7 @@ class Environment:
         self.timestep += 1
         update_state.update(state)
 
-        candle = self._row_to_candle_dict(row)
+        candle = convert.convert_to_dict(row)
 
         # not execute SL, TP here, rather execute it at the end of the last step -> simulate the next one hour after taking action
         # to get the final portfolio value : which will be used in reward
@@ -88,7 +63,7 @@ class Environment:
 
         if not done:
             next_row = self.data.loc[self.data.index[state['timestep']]].copy()
-            next_candle = self._row_to_candle_dict(next_row)
+            next_candle = convert.convert_to_dict(next_row)
             execute_SL_TP.execute(next_candle)
             Pt_end = portfolio_calculator.calculate(next_candle)
 

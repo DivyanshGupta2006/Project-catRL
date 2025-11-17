@@ -24,7 +24,7 @@ def backtest_step(data):
     calculate_metrics.calculate_order_metrics(order)
 
 def backtest():
-    data = read_file.read_merged_test_data()
+    data = read_file.read_merged_test_data(False)
     update_state.set_state(config['strategy']['capital'])
     update_portfolio.set_portfolio()
     for _ in tqdm(range(len(data) - 1), desc="Backtesting Progress"):

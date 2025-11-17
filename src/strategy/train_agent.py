@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 
 from src.backtester import print_backtesting_results
