@@ -11,34 +11,22 @@ class Environment:
         self.train_data = train_data
         self.sequence_length = sequence_length
         self.num_assets = num_assets
-        self.timestep = 0
         self.symbols = symbols
         self.capital = capital
 
-    def _assign_fiduciae(self, candle, fiduciae_action):
-        # fiduciae_action is a [10,] array
-        # First 9 are for cryptos, 10th is for cash
-        for i, symbol in enumerate(self.symbols):
-            if symbol in candle:
-                # Assign the fiduciae (weight) for this crypto
-                candle[symbol]['fiducia'] = fiduciae_action[i]
-
-        return candle
-
-    def reset(self, current_step):
+    def reset(self):
         update_state.set_state(self.capital)
         update_portfolio.set_portfolio()
-        self.current_step = current_step
 
-    def step(self, fiduciae_action, buffer):
+    def step(self, raw_action, buffer):
 
         state = read_file.read_state()
-        row = self.train_data.loc[self.train_data.index[state['timestep']]].copy()
+        timestep = state['timestep']
+        row = self.train_data.loc[self.train_data.index[timestep]].copy()
         state['timestep'] += 1
-        self.timestep += 1
         update_state.update(state)
 
-        fiduciae_action = fiducia_calculator.calculate(fiduciae_action)
+        fiduciae_action = fiducia_calculator.calculate(raw_action)
 
         candle = convert.convert_to_dict(row)
 
@@ -76,11 +64,11 @@ class Environment:
 
         info_dict = {'reward': reward, 'profit': (Pt_end - Pt_beg)}
 
-        buffer.store_state(self.train_data.iloc[self.timestep : self.timestep + self.sequence_length].values)
+        buffer.store_state(self.train_data.iloc[timestep : timestep + self.sequence_length].values)
         buffer.store_reward(reward)
         buffer.store_done(done)
 
-        return self.timestep, buffer
+        return buffer
 
     # i look at data for t-72 -> t-1 steps, i am at end of (t - 1)'th step (72 being my sequence length for LSTM)
     # then gives action for this step, i will execute this action at the start of t'th step

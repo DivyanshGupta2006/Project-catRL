@@ -36,9 +36,9 @@ class Agent:
     def get_action_and_value(self, buffer):
         x = buffer.states[buffer.current_step_state - 1].unsqueeze(0).to(self.device)
         dist, value = self.model.forward(x)
-        buffer.values = value
+        buffer.store_value(value)
         action = dist.sample()
-        buffer.actions = action
+        buffer.store_action(action)
         log_prob = dist.log_prob(action).sum(dim=-1)
         buffer.log_probs = log_prob
         return buffer
@@ -56,11 +56,12 @@ class Agent:
 
         T = len(rewards)
         advantages = torch.zeros_like(rewards).to(self.device)
+        print(advantages)
 
         last_gae_lam = 0
 
-        all_values = torch.cat([values, next_value.unsqueeze(0).to(self.device)], dim=0)
-        all_dones = torch.cat([dones, next_done.unsqueeze(0).to(self.device)], dim=0)
+        all_values = torch.cat([values, next_value.to(self.device)], dim=0)
+        all_dones = torch.cat([dones, next_done.to(self.device)], dim=0)
 
         for t in reversed(range(T)):
             value_t = all_values[t]
@@ -73,8 +74,8 @@ class Agent:
 
         returns = advantages + values
 
-        buffer.advantages = advantages.cpu().numpy()
-        buffer.returns = returns.cpu().numpy()
+        buffer.advantages = advantages.cpu().detach()
+        buffer.returns = returns.cpu().detach()
 
         return buffer
 
