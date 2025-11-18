@@ -1,4 +1,4 @@
-from src.utils import get_config, read_file, convert
+from src.utils import read_file, convert
 from src.update_files import update_state, update_portfolio
 from src.backtester import execute_SL_TP, place_order, execute_order, calculate_metrics
 from src.position_sizing import portfolio_calculator, amount_calculator, fiducia_calculator
@@ -7,17 +7,18 @@ from src.strategy import predict_position
 
 class Environment:
 
-    def __init__(self, train_data, sequence_length, num_assets):
-        self.data = train_data
+    def __init__(self, train_data, sequence_length, num_assets, symbols, capital):
+        self.train_data = train_data
         self.sequence_length = sequence_length
         self.num_assets = num_assets
-        self.config = get_config.read_yaml()
-        self.current_step = 0
+        self.timestep = 0
+        self.symbols = symbols
+        self.capital = capital
 
     def _assign_fiduciae(self, candle, fiduciae_action):
         # fiduciae_action is a [10,] array
         # First 9 are for cryptos, 10th is for cash
-        for i, symbol in enumerate(self.crypto_symbols):
+        for i, symbol in enumerate(self.symbols):
             if symbol in candle:
                 # Assign the fiduciae (weight) for this crypto
                 candle[symbol]['fiducia'] = fiduciae_action[i]
@@ -25,14 +26,14 @@ class Environment:
         return candle
 
     def reset(self, current_step):
-        update_state.set_state(self.config['strategy']['capital'])
+        update_state.set_state(self.capital)
         update_portfolio.set_portfolio()
         self.current_step = current_step
 
     def step(self, fiduciae_action, buffer):
 
         state = read_file.read_state()
-        row = self.data.loc[self.data.index[state['timestep']]].copy()
+        row = self.train_data.loc[self.train_data.index[state['timestep']]].copy()
         state['timestep'] += 1
         self.timestep += 1
         update_state.update(state)
@@ -46,7 +47,9 @@ class Environment:
 
         Pt = portfolio_calculator.calculate(candle)
 
-        candle = predict_position.assign_fiducia(candle, fiduciae_action)
+        calculate_metrics.calculate_candle_metrics(candle)
+
+        candle = predict_position.assign_fiducia(candle, fiduciae_action.tolist())
 
         candle = slippage.get_order_price(candle, Pt)
 
@@ -61,10 +64,10 @@ class Environment:
 
         Pt_beg = portfolio_calculator.calculate(candle)
 
-        done = (state['timestep'] >= len(self.data) - 1)
+        done = (state['timestep'] >= len(self.train_data) - 1)
 
         if not done:
-            next_row = self.data.loc[self.data.index[state['timestep']]].copy()
+            next_row = self.train_data.loc[self.train_data.index[state['timestep']]].copy()
             next_candle = convert.convert_to_dict(next_row)
             execute_SL_TP.execute(next_candle)
             Pt_end = portfolio_calculator.calculate(next_candle)
@@ -73,9 +76,9 @@ class Environment:
 
         info_dict = {'reward': reward, 'profit': (Pt_end - Pt_beg)}
 
-        buffer.states.append(self.train_data.loc[self.timestep : self.timestep + self.sequence_length - 1])
-        buffer.rewards.append(reward)
-        buffer.dones.append(done)
+        buffer.store_state(self.train_data.iloc[self.timestep : self.timestep + self.sequence_length].values)
+        buffer.store_reward(reward)
+        buffer.store_done(done)
 
         return self.timestep, buffer
 

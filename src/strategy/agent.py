@@ -34,11 +34,11 @@ class Agent:
         self.value_loss_fn = nn.MSELoss()
 
     def get_action_and_value(self, buffer):
-        x = buffer.states[-1]
+        x = buffer.states[buffer.current_step_state - 1].unsqueeze(0).to(self.device)
         dist, value = self.model.forward(x)
-        buffer.values = value.tolist()
+        buffer.values = value
         action = dist.sample()
-        buffer.actions = action.tolist()
+        buffer.actions = action
         log_prob = dist.log_prob(action).sum(dim=-1)
         buffer.log_probs = log_prob
         return buffer
@@ -50,17 +50,17 @@ class Agent:
         return new_log_prob, new_values, entropies
 
     def compute_gae(self, buffer, next_value, next_done):
-        rewards = torch.tensor(buffer.rewards, dtype=torch.float32).to(self.device)
-        values = torch.tensor(buffer.values, dtype=torch.float32).to(self.device)
-        dones = torch.tensor(buffer.dones, dtype=torch.float32).to(self.device)
+        rewards = buffer.rewards.to(self.device)
+        values = buffer.values.to(self.device)
+        dones = buffer.dones.to(self.device)
 
         T = len(rewards)
         advantages = torch.zeros_like(rewards).to(self.device)
 
         last_gae_lam = 0
 
-        all_values = torch.cat([values, next_value.unsqueeze(0)], dim=0)
-        all_dones = torch.cat([dones, next_done.unsqueeze(0)], dim=0)
+        all_values = torch.cat([values, next_value.unsqueeze(0).to(self.device)], dim=0)
+        all_dones = torch.cat([dones, next_done.unsqueeze(0).to(self.device)], dim=0)
 
         for t in reversed(range(T)):
             value_t = all_values[t]
@@ -73,8 +73,8 @@ class Agent:
 
         returns = advantages + values
 
-        buffer.advantages = advantages.cpu().numpy().tolist()
-        buffer.returns = returns.cpu().numpy().tolist()
+        buffer.advantages = advantages.cpu().numpy()
+        buffer.returns = returns.cpu().numpy()
 
         return buffer
 

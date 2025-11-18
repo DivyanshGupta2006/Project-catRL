@@ -5,7 +5,7 @@ import numpy as np
 class Buffer:
 
     def __init__(self, total_rollout_size, seq_len, input_dim, action_dim, device):
-        self.capacity = total_rollout_size
+        self.capacity = total_rollout_size + 1
         self.device = device
 
         self.states = torch.zeros((self.capacity, seq_len, input_dim), dtype=torch.float32)
