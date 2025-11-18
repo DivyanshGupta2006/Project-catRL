@@ -56,6 +56,7 @@ strategy:
 hyperparameters:
   num_assets: 10
   input_dim: 126
+  action_dim: 10
   num_lstm_layers: 1
   hidden_state_dim: 256
   actor_hidden_dim: 64

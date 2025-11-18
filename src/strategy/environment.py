@@ -1,9 +1,9 @@
 from src.utils import get_config, read_file, convert
 from src.update_files import update_state, update_portfolio
-
 from src.backtester import execute_SL_TP, place_order, execute_order, calculate_metrics
-from src.position_sizing import portfolio_calculator, amount_calculator
+from src.position_sizing import portfolio_calculator, amount_calculator, fiducia_calculator
 from src.risk_management import slippage, stop_loss, take_profit
+from src.strategy import predict_position
 
 class Environment:
 
@@ -37,6 +37,8 @@ class Environment:
         self.timestep += 1
         update_state.update(state)
 
+        fiduciae_action = fiducia_calculator.calculate(fiduciae_action)
+
         candle = convert.convert_to_dict(row)
 
         # not execute SL, TP here, rather execute it at the end of the last step -> simulate the next one hour after taking action
@@ -44,7 +46,7 @@ class Environment:
 
         Pt = portfolio_calculator.calculate(candle)
 
-        candle = self._assign_fiduciae(candle, fiduciae_action)
+        candle = predict_position.assign_fiducia(candle, fiduciae_action)
 
         candle = slippage.get_order_price(candle, Pt)
 
