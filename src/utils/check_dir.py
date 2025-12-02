@@ -5,4 +5,5 @@ def check(dir):
         print(f"Creating directory: {dir}")
         os.makedirs(dir)
     else:
-        print(f"Directory already exists: {dir}")
+        # print(f"Directory already exists: {dir}")
+        pass

@@ -1,4 +1,4 @@
-from src.data_processing import download_data, preprocess_data, split_data, feature_engineer, link_data, merge_data
+from src.data_pipeline import download_data, preprocess_data, split_data, feature_engineer, link_data, merge_data
 
 def update():
     a = input('Would you like to download the data? (y/n): ')
