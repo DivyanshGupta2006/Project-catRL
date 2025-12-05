@@ -45,25 +45,24 @@ class Agent:
         return buffer
 
     def _compute_gae(self, buffer, next_value):
-        rewards = buffer.get('rewards')
-        values = buffer.get('values')
+        rewards = buffer.get('reward')
+        values = buffer.get('value')
 
         advantages = np.zeros_like(rewards)
         last_gae_lambda = 0.0
 
-        print(rewards)
-
         for t in reversed(range(len(rewards))):
             if t == len(rewards) - 1:
-                next_value = next_value
+                next_value_ = next_value
             else:
-                next_value = values[t+1]
+                next_value_ = values[t+1]
 
-            delta = rewards[t] + self.gamma * next_value - values[t]
+            delta = rewards[t] + self.gamma * next_value_ - values[t]
             advantages[t] = last_gae_lambda = delta + self.gamma * self.gae_lambda * last_gae_lambda
 
-        buffer.advantages = advantages.tolist()
+        advantages = torch.tensor(advantages, device=self.device)
         buffer.returns = (advantages + values).tolist()
+        buffer.advantages = advantages.tolist()
 
         return buffer
 
@@ -86,20 +85,23 @@ class Agent:
         for _ in range(self.num_epochs):
             for mini_batch in range(num_mini_batches):
                 cur_states = states[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
+                cur_actions = actions[mini_batch*self.mini_batch_size: (mini_batch+1)*self.mini_batch_size]
                 cur_log_probs = log_probs[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
                 cur_advantages = advantages[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
                 cur_returns = returns[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
 
+                cur_states = cur_states.squeeze(dim=1).to(self.device)
+
                 dist, new_values = self.model.forward(cur_states)
                 new_values = new_values.squeeze(-1)
 
-                new_log_probs = dist.log_prob(actions).sum(dim=-1)
+                new_log_probs = dist.log_prob(cur_actions).sum(dim=-1)
                 entropy = dist.entropy().sum(dim=-1).mean()
 
                 ratio = torch.exp(new_log_probs - cur_log_probs)
 
                 surrogate1 = ratio * cur_advantages
-                surrogate2 = torch.clamp(ratio, 1.0 - self.clip_epsilon, 1.0 + self.clip_epsilon) * advantages
+                surrogate2 = torch.clamp(ratio, 1.0 - self.clip_epsilon, 1.0 + self.clip_epsilon) * cur_advantages
 
                 actor_loss = -torch.min(surrogate1, surrogate2).mean()
 

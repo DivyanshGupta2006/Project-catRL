@@ -39,7 +39,8 @@ MODEL_PATH = get_absolute_path.absolute(config['paths']['model_directory'] + "mo
 def train():
     print('Starting Training...')
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = 'cpu'
     print(f'Using device: {device}')
 
     print('Loading data...')
