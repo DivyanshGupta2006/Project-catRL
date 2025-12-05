@@ -32,7 +32,7 @@ class Agent:
         self.loss = nn.MSELoss()
 
     def get_action_and_value(self, buffer):
-        x = buffer.get('state')[-1]
+        x = buffer.get('state')[-1].to(self.device)
 
         dist, value = self.model.forward(x)
         action = dist.sample()
