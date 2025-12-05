@@ -38,9 +38,9 @@ class Agent:
         action = dist.sample()
         log_prob = dist.log_prob(action).sum(dim=-1)
 
-        buffer.store_action(action[0].tolist())
-        buffer.store_value(value[0].tolist())
-        buffer.store_log_prob(log_prob[0].tolist())
+        buffer.store_action(action[0])
+        buffer.store_value(value[0].item())
+        buffer.store_log_prob(log_prob[0].item())
 
         return buffer
 
@@ -50,6 +50,8 @@ class Agent:
 
         advantages = np.zeros_like(rewards)
         last_gae_lambda = 0.0
+
+        print(rewards)
 
         for t in reversed(range(len(rewards))):
             if t == len(rewards) - 1:

@@ -40,7 +40,7 @@ class Environment:
         prev_candle = convert.convert_to_dict(row1)
         candle = convert.convert_to_dict(row2)
 
-        fiduciae = fiducia_calculator.calculate(torch.tensor(raw_action))
+        fiduciae = fiducia_calculator.calculate(raw_action)
 
         fiduciae = fiduciae.tolist()
 
