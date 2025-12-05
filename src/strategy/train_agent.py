@@ -165,8 +165,7 @@ def train():
 
         # --- C. UPDATE PHASE (Learning) ---
         # Update on the full 1024 steps at once (M=T)
-        for e in range(hp['num_epochs']):
-            loss = agent.update(buffer)
+        loss = agent.update(buffer)
 
         # --- D. CLEANUP ---
         buffer.clear()

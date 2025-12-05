@@ -159,7 +159,7 @@ class Agent:
         with torch.no_grad():
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(self.device)
             # Hidden state is None -> initialized to 0 inside model for every window
-            dist, value = self.model(state_tensor)
+            dist, value = self.model.forward(state_tensor)
 
             action = dist.sample()
             log_prob = dist.log_prob(action).sum(dim=-1)
@@ -171,7 +171,7 @@ class Agent:
         self.model.eval()
         with torch.no_grad():
             state_tensor = torch.tensor(state, dtype=torch.float32).unsqueeze(0).to(self.device)
-            _, value = self.model(state_tensor)
+            _, value = self.model.forward(state_tensor)
         return value.cpu().item()
 
     def update(self, buffer):
@@ -191,7 +191,7 @@ class Agent:
         for _ in range(self.epochs):
             # Forward pass on ENTIRE batch at once
             # States shape: (Batch=T, Seq_Len, Features)
-            dist, new_values = self.model(states)
+            dist, new_values = self.model.forward(states)
             new_values = new_values.squeeze(-1)  # Match shape with returns
 
             new_log_probs = dist.log_prob(actions).sum(dim=-1)
