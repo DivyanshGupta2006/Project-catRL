@@ -59,9 +59,9 @@ def train():
     buffer = Buffer()
 
     for rollout in range((len(train_data)) / ROLLOUT_SIZE):
-        for epoch in range(NUM_EPOCHS):
-            for mini_batch in range(ROLLOUT_SIZE / BATCH_SIZE):
-                for sequence in range(BATCH_SIZE):
+        for mini_batch in range(ROLLOUT_SIZE / BATCH_SIZE):
+            for sequence in range(BATCH_SIZE):
+                for epoch in range(NUM_EPOCHS):
                     buffer = agent.get_action_and_value(buffer)
                     env.step(buffer)
                 agent.update(buffer)
