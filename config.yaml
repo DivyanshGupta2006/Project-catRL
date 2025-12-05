@@ -65,9 +65,9 @@ hyperparameters:
   gae_lambda: 0.95
   clip_epsilon: 0.2
   value_loss_coef: 0.5
-  entropy_loss_coef: 0.01
+  entropy_loss_coef: 0.1
   seq_len: 72
-  mini_batch_size: 4
-  rollout_size: 64
-  num_epochs: 10
+  mini_batch_size: 16
+  rollout_size: 256
+  num_epochs: 20
   learning_rate: 0.001

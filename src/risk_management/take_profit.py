@@ -4,6 +4,10 @@ config = get_config.read_yaml()
 
 def get_take_profit(candle):
     for crypto in candle:
-        candle[crypto]['take_price'] = candle[crypto]['order_price'] + (config['strategy']['take_profit_multiple'] * candle[crypto]['atr'] * candle[crypto]['fiducia'] / abs(candle[crypto]['fiducia']))
-        candle[crypto]['take_portion'] = config['strategy']['take_profit_portion'] * candle[crypto]['amt']
+        if candle[crypto]['fiducia'] != 0:
+            candle[crypto]['take_price'] = candle[crypto]['order_price'] + (config['strategy']['take_profit_multiple'] * candle[crypto]['atr'] * candle[crypto]['fiducia'] / abs(candle[crypto]['fiducia']))
+            candle[crypto]['take_portion'] = config['strategy']['take_profit_portion'] * candle[crypto]['amt']
+        else:
+            candle[crypto]['take_price'] = 0
+            candle[crypto]['take_portion'] = 0
     return candle

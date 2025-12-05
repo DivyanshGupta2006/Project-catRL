@@ -84,6 +84,8 @@ class Agent:
 
         num_mini_batches = int(len(rewards) / self.mini_batch_size)
 
+        losses = []
+
         for _ in range(self.num_epochs):
             for mini_batch in range(num_mini_batches):
                 cur_states = states[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
@@ -115,7 +117,11 @@ class Agent:
                 loss.backward()
                 self.optimizer.step()
 
-        return loss.item()
+                losses.append(loss.item())
+
+        losses = np.array(losses)
+        mean = np.mean(losses)
+        return mean
 
     def save(self):
         print("Saving the model...")

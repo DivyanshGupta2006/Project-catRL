@@ -39,8 +39,7 @@ MODEL_PATH = get_absolute_path.absolute(config['paths']['model_directory'] + "mo
 def train():
     print('Starting Training...')
 
-    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = 'cpu'
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
 
     print('Loading data...')
@@ -80,7 +79,7 @@ def train():
                          device=device)
 
     num_rollouts = (int)(len(train_data_norm) / ROLLOUT_SIZE)
-    num_rollouts = min(50, num_rollouts)
+    num_rollouts = min(20, num_rollouts)
     state = env.reset(train_data_norm)
 
     for rollout in tqdm(range(num_rollouts), desc='Training Rollouts'):
@@ -96,7 +95,7 @@ def train():
             buffer.store_dones(done)
             if done == 1:
                 state = env.reset(train_data_norm)
-                break
+                # break
 
         next_value = 0
         if done != 1:
@@ -107,7 +106,8 @@ def train():
             temp_buffer.clear()
 
         loss = agent.update(buffer, next_value)
-        print(f" Rollout {rollout}/{num_rollouts} | Loss: {loss:.2f}")
+        print(f"\nRollout {rollout}/{num_rollouts} | Loss: {loss:.2f}")
+        # print(f"Trajectory length: {len(buffer.rewards)}")
 
     agent.save()
     print('Training complete.')
