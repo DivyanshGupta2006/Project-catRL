@@ -47,6 +47,7 @@ class Agent:
     def _compute_gae(self, buffer, next_value):
         rewards = buffer.get('reward')
         values = buffer.get('value')
+        dones = buffer.get('done')
 
         advantages = np.zeros_like(rewards)
         last_gae_lambda = 0.0
@@ -57,8 +58,9 @@ class Agent:
             else:
                 next_value_ = values[t+1]
 
-            delta = rewards[t] + self.gamma * next_value_ - values[t]
-            advantages[t] = last_gae_lambda = delta + self.gamma * self.gae_lambda * last_gae_lambda
+            next_non_terminal = 1.0 - dones[t]
+            delta = rewards[t] + self.gamma * next_value_ * next_non_terminal - values[t]
+            advantages[t] = last_gae_lambda = delta + self.gamma * self.gae_lambda * next_non_terminal * last_gae_lambda
 
         advantages = torch.tensor(advantages, device=self.device)
         buffer.returns = (advantages + values).tolist()
@@ -107,7 +109,7 @@ class Agent:
 
                 critic_loss = self.loss(new_values, cur_returns)
 
-                loss = actor_loss + critic_loss * self.value_loss_coef + self.entropy_loss_coef * entropy
+                loss = actor_loss + critic_loss * self.value_loss_coef - (self.entropy_loss_coef * entropy)
 
                 self.optimizer.zero_grad()
                 loss.backward()

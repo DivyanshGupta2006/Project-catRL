@@ -16,6 +16,7 @@ class Buffer:
         self.rewards = []
         self.advantages = []
         self.returns = []
+        self.dones = []
 
     def store_state(self, state):
         if len(self.states) < self.capacity:
@@ -45,6 +46,10 @@ class Buffer:
         if len(self.returns) < self.capacity:
             self.returns.append(_return)
 
+    def store_dones(self, done):
+        if len(self.dones) < self.capacity:
+            self.dones.append(done)
+
     def get(self, req='state'):
         if req == 'state':
             return torch.tensor(np.array(self.states), dtype=torch.float32).to(self.device)
@@ -60,6 +65,8 @@ class Buffer:
             return torch.tensor(np.array(self.advantages), dtype=torch.float32).to(self.device)
         if req == 'return':
             return torch.tensor(np.array(self.returns), dtype=torch.float32).to(self.device)
+        if req == 'done':
+            return torch.tensor(np.array(self.dones), dtype=torch.float32).to(self.device)
         return None
 
     def clear(self):
@@ -70,3 +77,4 @@ class Buffer:
         self.rewards = []
         self.advantages = []
         self.returns = []
+        self.dones = []

@@ -80,25 +80,31 @@ def train():
                          device=device)
 
     num_rollouts = (int)(len(train_data_norm) / ROLLOUT_SIZE)
+    num_rollouts = min(50, num_rollouts)
     state = env.reset(train_data_norm)
 
-    for rollout in tqdm(range(num_rollouts)):
+    for rollout in tqdm(range(num_rollouts), desc='Training Rollouts'):
         buffer.clear()
         buffer.store_state(state)
 
         # rollout
         for i in range(ROLLOUT_SIZE):
             buffer = agent.get_action_and_value(buffer)
-            state, reward = env.step(buffer.actions[-1], train_data_norm)
+            state, reward, done = env.step(buffer.actions[-1], train_data_norm)
             buffer.store_state(state)
             buffer.store_rewards(reward)
+            buffer.store_dones(done)
+            if done == 1:
+                state = env.reset(train_data_norm)
+                break
 
         next_value = 0
-        if state is not None:
-            temp_buffer.store_state(state)
-            temp_buffer = agent.get_action_and_value(temp_buffer)
-            next_value = temp_buffer.values[-1]
-        temp_buffer.clear()
+        if done != 1:
+            if state is not None:
+                temp_buffer.store_state(state)
+                temp_buffer = agent.get_action_and_value(temp_buffer)
+                next_value = temp_buffer.values[-1]
+            temp_buffer.clear()
 
         loss = agent.update(buffer, next_value)
         print(f" Rollout {rollout}/{num_rollouts} | Loss: {loss:.2f}")

@@ -2,6 +2,7 @@ import torch
 
 from src.backtester import place_order, execute_order, calculate_metrics, execute_SL_TP
 from src.position_sizing import fiducia_calculator, portfolio_calculator, amount_calculator
+from src.update_files import update_state, update_portfolio
 from src.risk_management import slippage, stop_loss, take_profit
 from src.utils import convert
 
@@ -54,17 +55,25 @@ class Environment:
 
         order = place_order.place(prev_candle)
         execute_order.execute(order)
+        calculate_metrics.calculate_order_metrics(order)
         execute_SL_TP.execute(candle)
+        calculate_metrics.calculate_candle_metrics(candle)
 
         new_portfolio = portfolio_calculator.calculate(candle)
+        if(new_portfolio < 0):
+            done = 1
+        else:
+            done = 0
         reward = self._get_reward(self.prev_portfolio, new_portfolio)
 
         self.current_step += 1
         next_states = self._get_states(field_of_view)
 
-        return next_states, reward
+        return next_states, reward, done
 
     def reset(self, field_of_view):
+        update_state.set_state(self.capital)
+        update_portfolio.set_portfolio()
         self.current_step = self.seq_len
         self.prev_portfolio = self.capital
         return self._get_states(field_of_view)
