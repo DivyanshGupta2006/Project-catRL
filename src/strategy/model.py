@@ -4,17 +4,17 @@ from torch.distributions import Normal
 
 class Model(nn.Module):
     def __init__(self,
+                 n_assets,
                  input_dim,
                  lstm_hidden_dim,
-                 n_assets,
                  n_lstm_layers,
                  actor_hidden_dim,
                  critic_hidden_dim):
         super(Model, self).__init__()
 
+        self.n_assets = n_assets
         self.input_dim = input_dim
         self.lstm_hidden_dim = lstm_hidden_dim
-        self.n_assets = n_assets
         self.n_lstm_layers = n_lstm_layers
         self.actor_hidden_dim = actor_hidden_dim
         self.critic_hidden_dim = critic_hidden_dim
