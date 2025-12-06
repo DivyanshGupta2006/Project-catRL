@@ -95,27 +95,27 @@ def read_preprocessed_val_data(symbol) -> pd.DataFrame:
     except Exception as e:
         return None
 
-def read_merged_training_data() -> pd.DataFrame:
+def read_merged_training_data(normalized = True) -> pd.DataFrame:
     dir = get_absolute_path.absolute(config['paths']['merged_training_data_directory'])
-    file = 'merged_training_data'
+    file = 'merged_training_normalized_data' if normalized else 'merged_training_unnormalized_data'
     try:
         data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
         return data
     except Exception as e:
         return None
 
-def read_merged_test_data() -> pd.DataFrame:
+def read_merged_test_data(normalized = True) -> pd.DataFrame:
     dir = get_absolute_path.absolute(config['paths']['merged_test_data_directory'])
-    file = 'merged_test_data'
+    file = 'merged_test_normalized_data' if normalized else ('merged_test_unnormalized_data')
     try:
         data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
         return data
     except Exception as e:
         return None
 
-def read_merged_val_data() -> pd.DataFrame:
+def read_merged_val_data(normalized = True) -> pd.DataFrame:
     dir = get_absolute_path.absolute(config['paths']['merged_val_data_directory'])
-    file = 'merged_val_data'
+    file = 'merged_val_normalized_data' if normalized else 'merged_val_unnormalized_data'
     try:
         data = pd.read_csv(f'{dir}/{file}.csv', index_col=[0])
         return data

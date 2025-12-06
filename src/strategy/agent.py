@@ -1,128 +1,129 @@
+import numpy as np
 import torch
 import torch.nn as nn
-from torch.optim import Adam
-from src.utils import get_config
-
-config = get_config.read_yaml()
+from tqdm import tqdm
 
 class Agent:
+
     def __init__(self,
                  model,
                  gamma,
                  gae_lambda,
                  clip_epsilon,
+                 num_epochs,
+                 mini_batch_size,
+                 learning_rate,
                  value_loss_coef,
                  entropy_loss_coef,
-                 learning_rate,
-                 device,
-                 model_path):
-
-        self.device = device
-        self.model = model.to(self.device)
-
+                 model_path,
+                 device):
+        self.model = model
         self.gamma = gamma
         self.gae_lambda = gae_lambda
         self.clip_epsilon = clip_epsilon
+        self.num_epochs = num_epochs
+        self.mini_batch_size = mini_batch_size
+        self.learning_rate = learning_rate
         self.value_loss_coef = value_loss_coef
         self.entropy_loss_coef = entropy_loss_coef
-        self.learning_rate = learning_rate
         self.model_path = model_path
+        self.device = device
 
-        self.optimizer = Adam(model.parameters(), lr=learning_rate)
-        self.value_loss_fn = nn.MSELoss()
+        self.optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
+        self.loss = nn.MSELoss()
 
     def get_action_and_value(self, buffer):
-        x = buffer.states[-1]
+        x = buffer.get('state')[-1].to(self.device)
+
         dist, value = self.model.forward(x)
-        buffer.values = value.tolist()
         action = dist.sample()
-        buffer.actions = action.tolist()
         log_prob = dist.log_prob(action).sum(dim=-1)
-        buffer.log_probs = log_prob
+
+        buffer.store_action(action[0])
+        buffer.store_value(value[0].item())
+        buffer.store_log_prob(log_prob[0].item())
+
         return buffer
 
-    def get_new_model_output(self, states, actions):
-        dist, new_values = self.model.forward(states)
-        new_log_prob = dist.log_prob(actions).sum(dim=-1)
-        entropies = dist.entropy().sum(dim=-1)
-        return new_log_prob, new_values, entropies
+    def _compute_gae(self, buffer, next_value):
+        rewards = buffer.get('reward')
+        values = buffer.get('value')
+        dones = buffer.get('done')
 
-    def _compute_gae(self, buffer, next_value, next_done):
-        rewards = torch.tensor(buffer.rewards, dtype=torch.float32).to(self.device)
-        values = torch.tensor(buffer.values, dtype=torch.float32).to(self.device)
-        dones = torch.tensor(buffer.dones, dtype=torch.float32).to(self.device)
+        advantages = np.zeros_like(rewards)
+        last_gae_lambda = 0.0
 
-        T = len(rewards)
-        advantages = torch.zeros_like(rewards).to(self.device)
+        for t in reversed(range(len(rewards))):
+            if t == len(rewards) - 1:
+                next_value_ = next_value
+            else:
+                next_value_ = values[t+1]
 
-        last_gae_lam = 0
+            next_non_terminal = 1.0 - dones[t]
+            delta = rewards[t] + self.gamma * next_value_ * next_non_terminal - values[t]
+            advantages[t] = last_gae_lambda = delta + self.gamma * self.gae_lambda * next_non_terminal * last_gae_lambda
 
-        all_values = torch.cat([values, next_value.unsqueeze(0)], dim=0)
-        all_dones = torch.cat([dones, next_done.unsqueeze(0)], dim=0)
+        advantages = torch.tensor(advantages, device=self.device)
+        buffer.returns = (advantages + values).tolist()
+        buffer.advantages = advantages.tolist()
 
-        for t in reversed(range(T)):
-            value_t = all_values[t]
-            value_t_plus_1 = all_values[t + 1]
-            next_non_terminal = 1.0 - all_dones[t + 1]
+        return buffer
 
-            delta = rewards[t] + self.gamma * value_t_plus_1 * next_non_terminal - value_t
+    def update(self, buffer, next_value):
+        self.model.train()
 
-            advantages[t] = last_gae_lam = delta + self.gamma * self.gae_lambda * last_gae_lam * next_non_terminal
+        buffer = self._compute_gae(buffer, next_value)
+        rewards = buffer.get('reward')
 
-        returns = advantages + values
+        num_mini_batches = int(len(rewards) / self.mini_batch_size)
 
-        buffer.advantages = advantages.cpu().numpy().tolist()
-        buffer.returns = returns.cpu().numpy().tolist()
+        losses = []
 
+        for _ in range(self.num_epochs):
+            buffer.random_shuffling()
+            states = buffer.get('state')
+            actions = buffer.get('action')
+            log_probs = buffer.get('log_prob')
+            advantages = buffer.get('advantage')
+            returns = buffer.get('return')
+            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-9)
 
-    def update(self, buffer, start):
-        # Gather the hyperparameters
-        mb_size = config['hyperparameters']['mini_batch_size']
+            for mini_batch in range(num_mini_batches):
+                cur_states = states[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
+                cur_actions = actions[mini_batch*self.mini_batch_size: (mini_batch+1)*self.mini_batch_size]
+                cur_log_probs = log_probs[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
+                cur_advantages = advantages[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
+                cur_returns = returns[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
 
-        states = torch.tensor(buffer.states[start:start+mb_size], dtype=torch.float32).to(self.device)
-        actions = torch.tensor(buffer.actions[start:start+mb_size], dtype=torch.float32).to(self.device)
-        old_log_probs = torch.tensor(buffer.log_probs[start:start+mb_size], dtype=torch.float32).to(self.device)
-        advantages = torch.tensor(buffer.advantages[start:start+mb_size], dtype=torch.float32).to(self.device)
-        returns = torch.tensor(buffer.returns[start:start+mb_size], dtype=torch.float32).to(self.device)
+                cur_states = cur_states.squeeze(dim=1).to(self.device)
 
-        num_samples = len(states)
-        if num_samples == 0:
-            return
+                dist, new_values = self.model.forward(cur_states)
+                new_values = new_values.squeeze(-1)
 
-        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+                new_log_probs = dist.log_prob(cur_actions).sum(dim=-1)
+                entropy = dist.entropy().sum(dim=-1).mean()
 
-        # Compute the new model data with the current parameters
-        new_log_probs, new_values, entropies = self.get_new_model_output(states,actions)
+                ratio = torch.exp(new_log_probs - cur_log_probs)
 
-        # Compute all losses
-        value_loss = self.value_loss_fn(new_values, returns).mean()
-        ratio = torch.exp(new_log_probs - old_log_probs)
-        surr1 = ratio * advantages
-        surr2 = torch.clip(ratio, 1 - self.clip_epsilon, 1 + self.clip_epsilon) * advantages
-        policy_loss = torch.min(surr1,surr2).mean()
-        entropy_loss = entropies.mean()
+                surrogate1 = ratio * cur_advantages
+                surrogate2 = torch.clamp(ratio, 1.0 - self.clip_epsilon, 1.0 + self.clip_epsilon) * cur_advantages
 
-        total_loss = self.value_loss_coef*value_loss - policy_loss - self.entropy_loss_coef*entropy_loss
+                actor_loss = -torch.min(surrogate1, surrogate2).mean()
 
-        # Backpropogate the loss
-        self.optimizer.zero_grad()
-        total_loss.backward()
-        self.optimizer.step()
+                critic_loss = self.loss(new_values, cur_returns)
 
+                loss = actor_loss + critic_loss * self.value_loss_coef - (self.entropy_loss_coef * entropy)
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                losses.append(loss.item())
+
+        losses = np.array(losses)
+        mean = np.mean(losses)
+        return mean
 
     def save(self):
         print("Saving the model...")
-        torch.save({
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-        }, self.model_path)
-
-    def load(self):
-        print("Loading the model...")
-        try:
-            checkpoint = torch.load(self.model_path, map_location=self.device)
-            self.model.load_state_dict(checkpoint['model_state_dict'])
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            self.model.to(self.device)
-        except Exception as e:
-            print(f"--- Error loading models: {e} ---")
+        torch.save(self.model.state_dict(), self.model_path)

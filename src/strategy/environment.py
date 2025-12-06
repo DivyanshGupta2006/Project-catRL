@@ -1,175 +1,110 @@
-import numpy as np
-import pandas as pd
-import ast
+import torch
+import matplotlib.pyplot as plt
 
-from src.utils import get_config, read_file
+from src.backtester import place_order, execute_order, calculate_metrics, execute_SL_TP
+from src.position_sizing import fiducia_calculator, portfolio_calculator, amount_calculator
 from src.update_files import update_state, update_portfolio
-
-from src.backtester import execute_SL_TP, place_order, execute_order
-from src.position_sizing import portfolio_calculator, amount_calculator
 from src.risk_management import slippage, stop_loss, take_profit
-
-config = get_config.read_yaml()
-NUM_ASSETS = len(config['data']['symbols']) + 1  # 9 cryptos + 1 cash
-
+from src.utils import convert
 
 class Environment:
 
-    def __init__(self, data):
-        """
-        Initializes the environment.
-
-        Args:
-            data (pd.DataFrame): The full, merged, and preprocessed
-                                             time-series data.
-        """
-        # super(Environment, self).__init__()
-
+    def __init__(self,
+                 data,
+                 bound_reward_factor,
+                 seq_len,
+                 capital,
+                 symbols,
+                 results_path):
         self.data = data
-        self.max_steps = len(self.data) - 1
+        self.bound_reward_factor = bound_reward_factor
+        self.seq_len = seq_len
+        self.capital = capital
+        self.symbols = symbols
+        self.results_path = results_path
 
-        # --- Environment Configuration ---
-        self.action_space_dim = NUM_ASSETS  # 10 (9 cryptos + 1 cash)
-        self.observation_space_dim = len(self.data.columns)  # 126
+        for idx, symbol in enumerate(self.symbols):
+            self.symbols[idx] = symbol.split('/')[0]
 
-        # --- Helper attributes from config ---
-        self.config = config
-        self.symbols = self.config['data']['symbols']
-        # Get 'ETH' from 'ETH/USDT'
-        self.crypto_symbols = [s.split('/')[0] for s in self.symbols]
+        self.current_step = self.seq_len
+        self.prev_portfolio = self.capital
+        self.equity = []
+        self.reset_counter = 0
 
-        print(f"Environment initialized with {self.max_steps + 1} timesteps.")
-        print(f"Observation space dim: {self.observation_space_dim}")
-        print(f"Action space dim: {self.action_space_dim}")
-
-    def _row_to_candle_dict(self, row):
-        """
-        Converts a single row from the merged DataFrame into the
-        'candle' dictionary format required by the backtester scripts.
-        This mimics the logic from 'data_handler.py'.
-        """
-        # The DataFrame's columns are string-represented tuples, e.g., "('close', 'ETH')"
-        # We must convert them to actual tuples to unstack.
+    def _get_states(self, field_of_view):
         try:
-            row.index = row.index.map(ast.literal_eval)
-        except ValueError:
-            # If index is already evaluated, skip
-            pass
+            obs = field_of_view.iloc[self.current_step - self.seq_len : self.current_step].copy()
+            states = torch.tensor(obs.values, dtype=torch.float32)
+            return states.unsqueeze(0)
+        except:
+            return None
 
-        candle_df = row.unstack(level=0)
-        candle = candle_df.to_dict(orient='index')
-        return candle
+    def _get_reward(self, prev, new, flag, fiduciae):
+        reward = 0
+        if flag is None:
+            reward = (new - prev) / prev
+        else:
+            if flag == 'sl':
+                reward = (new - prev - self.bound_reward_factor * prev) / prev
+            else:
+                reward = (new - prev + self.bound_reward_factor * prev) / prev
 
-    def _assign_fiduciae(self, candle, fiduciae_action):
-        """
-        Assigns the agent's action (fiduciae vector) to the candle dict.
-        This replaces the 'predict_position.py' script.
-        """
-        # fiduciae_action is a [10,] array
-        # First 9 are for cryptos, 10th is for cash
-        for i, symbol in enumerate(self.crypto_symbols):
-            if symbol in candle:
-                # Assign the fiduciae (weight) for this crypto
-                candle[symbol]['fiducia'] = fiduciae_action[i]
+        for fiducia in fiduciae:
+            if abs(fiducia) <= 1e-7:
+                reward = reward - 1
 
-        # Note: The 10th action (cash fiducia) is implicitly handled
-        # by the position sizing and order execution logic.
-        return candle
+        return reward
 
-    def reset(self):
-        """
-        Resets the environment state to the very beginning.
-        - Resets the state.json (timestep=0, cash=initial)
-        - Resets the portfolio.csv (all assets=0)
-        - Returns the first observation.
-        """
-        # Set state.json to timestep 0 and initial capital
-        update_state.set_state(self.config['strategy']['capital'])
+    def step(self, raw_action, field_of_view):
+        row1 = self.data.iloc[self.current_step - 1]
+        row2 = self.data.iloc[self.current_step]
+        prev_candle = convert.convert_to_dict(row1)
+        candle = convert.convert_to_dict(row2)
 
-        # Set portfolio.csv to all zeros
-        update_portfolio.set_portfolio()
+        fiduciae = fiducia_calculator.calculate(raw_action)
 
-        # Get the very first observation (row 0)
-        # .loc is used because the index is a timestamp
-        obs = self.data.loc[self.data.index[0]].to_numpy()
+        fiduciae = fiduciae.tolist()
 
-        return obs
+        for idx, crypto in enumerate(self.symbols):
+            prev_candle[crypto]['fiducia'] = fiduciae[idx]
 
-    def step(self, fiduciae_action):
-        """
-        Advances the environment by one timestep using the agent's action.
+        prev_candle = slippage.get_order_price(prev_candle, self.prev_portfolio)
+        prev_candle = amount_calculator.calculate(prev_candle, self.prev_portfolio)
+        prev_candle = stop_loss.get_stop_loss(prev_candle)
+        prev_candle = take_profit.get_take_profit(prev_candle)
 
-        Args:
-            fiduciae_action (np.array): The vector of 10 continuous actions
-                                        (fiduciae/weights) from the agent.
-
-        Returns:
-            tuple: (next_observation, reward, done, info)
-        """
-
-        # --- 1. GET CURRENT STATE (Time t) ---
-        state_t = read_file.read_state()
-        t = state_t['timestep']
-
-        # Get the raw data row for time t
-        row_t = self.data.loc[self.data.index[t]]
-
-        # Convert row to the 'candle' dict format
-        candle_t = self._row_to_candle_dict(row_t)
-
-        # --- 2. EXECUTE PRE-TRADE LOGIC ---
-        # Execute any stop-loss / take-profit orders from *previous* step
-        execute_SL_TP.execute(candle_t)
-
-        # Calculate portfolio value *before* new trades
-        value_t = portfolio_calculator.calculate(candle_t)
-
-        # --- 3. APPLY AGENT'S ACTION (Time t) ---
-        # Assign the agent's action (fiduciae) to the candle
-        candle_t = self._assign_fiduciae(candle_t, fiduciae_action)
-
-        # --- 4. EXECUTE TRADING LOGIC (Time t) ---
-        # Run the full backtesting pipeline using the agent's fiduciae
-        candle_t = slippage.get_order_price(candle_t, value_t)
-        candle_t = amount_calculator.calculate(candle_t, value_t)
-        candle_t = stop_loss.get_stop_loss(candle_t)
-        candle_t = take_profit.get_take_profit(candle_t)
-
-        order = place_order.place(candle_t)
-
-        # This function updates portfolio.csv and state.json (cash)
+        order = place_order.place(prev_candle)
         execute_order.execute(order)
+        calculate_metrics.calculate_order_metrics(order)
+        flag = execute_SL_TP.execute(candle)
+        calculate_metrics.calculate_candle_metrics(candle)
 
-        # --- 5. ADVANCE TIME & GET REWARD (Time t+1) ---
-        # Manually advance the timestep in state.json
-        state_t['timestep'] += 1
-        update_state.update(state_t)
+        new_portfolio = portfolio_calculator.calculate(candle)
+        self.equity.append(new_portfolio)
+        if(new_portfolio < 0.001 * self.capital):
+            done = 1
+        else:
+            done = 0
+        reward = self._get_reward(self.prev_portfolio, new_portfolio, flag, fiduciae)
 
-        t_plus_1 = state_t['timestep']
+        self.current_step += 1
+        next_states = self._get_states(field_of_view)
 
-        # Check if the episode is done
-        done = (t_plus_1 >= self.max_steps)
+        return next_states, reward, done
 
-        # Get the index for the next observation
-        # If done, we just use the last available step
-        next_obs_index = self.max_steps - 1 if done else t_plus_1
-
-        # Get the raw data row for time t+1
-        row_t_plus_1 = self.data.loc[self.data.index[next_obs_index]]
-
-        # Convert to candle dict to calculate the new portfolio value
-        candle_t_plus_1 = self._row_to_candle_dict(row_t_plus_1)
-
-        # Calculate the new portfolio value at time t+1
-        value_t_plus_1 = portfolio_calculator.calculate(candle_t_plus_1)
-
-        # --- 6. CALCULATE REWARD ---
-        # The reward is the change in portfolio value
-        reward = value_t_plus_1 - value_t
-
-        # Get the next observation to return to the agent
-        next_obs = row_t_plus_1.to_numpy()
-
-        info_dict = {}  # Placeholder for extra info
-
-        return next_obs, reward, done, info_dict
+    def reset(self, field_of_view, to_plot=False):
+        update_state.set_state(self.capital)
+        update_portfolio.set_portfolio()
+        self.current_step = self.seq_len
+        self.prev_portfolio = self.capital
+        if to_plot:
+            plt.plot(self.equity)
+            plt.title('Equity Curve')
+            plt.ylabel('Equity')
+            plt.xlabel('Time')
+            # plt.show()
+            plt.savefig(self.results_path / f'equity_curve{self.reset_counter}.png', dpi=300, bbox_inches='tight')
+            plt.close()
+        self.equity = []
+        self.reset_counter += 1
+        return self._get_states(field_of_view)

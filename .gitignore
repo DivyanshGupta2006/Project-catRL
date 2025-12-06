@@ -9,5 +9,5 @@ __pycache__/
 .env
 /portfolio.csv
 /state.json
-bgm.mp3
+/bgm.mp3
 play.vbs

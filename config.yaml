@@ -45,28 +45,30 @@ data:
     - 'XLM/USDT'
 
 strategy:
-  capital: 100000
-  stop_loss_multiple: 4.5
-  take_profit_multiple: 6.0
-  stop_loss_portion : 0.7
-  take_profit_portion : 0.7
+  capital: 1000000
+  stop_loss_multiple: 3
+  take_profit_multiple: 4.5
+  stop_loss_portion : 0.8
+  take_profit_portion : 0.8
   slippage_cost_fraction : 0.002
   transaction_cost_fraction : 0.001
 
 hyperparameters:
   num_assets: 10
   input_dim: 126
+  action_dim: 10
   num_lstm_layers: 1
-  hidden_state_dim: 256
+  hidden_state_dim: 512
   actor_hidden_dim: 64
   critic_hidden_dim: 64
   gamma: 0.99
   gae_lambda: 0.95
   clip_epsilon: 0.2
   value_loss_coef: 0.5
-  entropy_loss_coef: 0.01
-  seq_len: 72
-  mini_batch_size: 128
-  rollout_size: 4096
+  entropy_loss_coef: 0.1
+  seq_len: 120
+  mini_batch_size: 16
+  rollout_size: 256
   num_epochs: 10
   learning_rate: 0.001
+  bound_reward_factor: 0.11
