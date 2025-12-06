@@ -66,9 +66,9 @@ hyperparameters:
   clip_epsilon: 0.2
   value_loss_coef: 0.5
   entropy_loss_coef: 0.1
-  seq_len: 84
-  mini_batch_size: 32
-  rollout_size: 512
-  num_epochs: 15
+  seq_len: 120
+  mini_batch_size: 16
+  rollout_size: 256
+  num_epochs: 10
   learning_rate: 0.001
   bound_reward_factor: 0.11

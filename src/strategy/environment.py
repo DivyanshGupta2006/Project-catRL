@@ -81,7 +81,7 @@ class Environment:
 
         new_portfolio = portfolio_calculator.calculate(candle)
         self.equity.append(new_portfolio)
-        if(new_portfolio < 0):
+        if(new_portfolio < 0.001 * self.capital):
             done = 1
         else:
             done = 0
