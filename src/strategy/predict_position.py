@@ -40,25 +40,29 @@ class Predictor:
                            self.actor_hidden_dim,
                            self.critic_hidden_dim).to(self.device)
 
-        try:
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-            self.model.eval()
-
-        except:
-            print(f'Failed to load model')
+        self.model_loaded = False
 
         self.buffer = deque(maxlen=seq_len)
 
         self.feature_list = [
-            'open', 'high', 'low', 'close', 'volume',
-            'rsi',
-            'sma-50', 'sma-100', 'sma-200',
-            'ema-50', 'ema-100', 'ema-200',
-            'atr', 'adx'
+            'volume',
+            'rsi', 'mfi', 'adx', 'bop',
+            'stochastic_oscillator-slow', 'macd-line', 'macd-hist',
+            'sma-200', 'ema-50', 'tema-50',
+            'obv', 'atr', 'candle'
         ]
 
         for idx, symbol in enumerate(self.symbols):
             self.symbols[idx] = symbol.split('/')[0]
+
+    def load_model(self):
+        try:
+            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+            self.model.eval()
+            self.model_loaded = True
+        except:
+            print(f'Failed to load model')
+            self.model_loaded = False
 
     def _candle_to_vector(self, candle):
         vector = []
@@ -71,6 +75,8 @@ class Predictor:
         return np.array(vector, dtype=np.float32)
 
     def assign_prediction(self, candle):
+        if not self.model_loaded:
+            self.load_model()
         current_vector = self._candle_to_vector(candle)
 
         self.buffer.append(current_vector)

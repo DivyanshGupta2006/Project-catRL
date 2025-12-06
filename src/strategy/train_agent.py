@@ -5,7 +5,7 @@ from src.strategy.model import Model
 from src.strategy.agent import Agent
 from src.strategy.environment import Environment
 from src.strategy.buffer import Buffer
-from src.utils import get_config, get_absolute_path, read_file
+from src.utils import get_config, get_absolute_path, read_file, convert, check_dir
 
 config = get_config.read_yaml()
 
@@ -31,10 +31,15 @@ MINI_BATCH_SIZE = hp['mini_batch_size']
 ROLLOUT_SIZE = hp['rollout_size']
 NUM_EPOCHS = hp['num_epochs']
 LEARNING_RATE = hp['learning_rate']
+BOUND_REWARD_FACTOR = hp['bound_reward_factor']
 
 SYMBOLS = config['data']['symbols']
 CAPITAL = config['strategy']['capital']
 MODEL_PATH = get_absolute_path.absolute(config['paths']['model_directory'] + "model.pth")
+RESULTS_PATH = get_absolute_path.absolute(config['paths']['report_directory'])  / 'equity-charts/'
+
+check_dir.check(get_absolute_path.absolute(config['paths']['model_directory']))
+check_dir.check(get_absolute_path.absolute(config['paths']['report_directory'] + 'equity-charts/'))
 
 def train():
     print('Starting Training...')
@@ -45,6 +50,12 @@ def train():
     print('Loading data...')
     train_data_norm = read_file.read_merged_training_data(True)
     train_data_unnorm = read_file.read_merged_training_data(False)
+
+    # drop the redundant columns
+    train_data_norm.columns = [convert.convert_to_tuple(col) for col in train_data_norm.columns]
+    train_data_norm.drop(columns=[col for col in train_data_norm.columns if
+                                  col[0] == 'open' or col[0] == 'close' or col[0] == 'high' or col[0] == 'low'],
+                         inplace=True)
 
     print('Instantiating entities...')
 
@@ -68,9 +79,11 @@ def train():
                   device=device)
 
     env = Environment(data=train_data_unnorm,
+                      bound_reward_factor=BOUND_REWARD_FACTOR,
                       seq_len=SEQUENCE_LENGTH,
                       capital=CAPITAL,
-                      symbols=SYMBOLS)
+                      symbols=SYMBOLS,
+                      results_path=RESULTS_PATH)
 
     buffer = Buffer(total_rollout_size=ROLLOUT_SIZE,
                     device=device)
@@ -82,20 +95,21 @@ def train():
     num_rollouts = min(20, num_rollouts)
     state = env.reset(train_data_norm)
 
-    for rollout in tqdm(range(num_rollouts), desc='Training Rollouts'):
+    for rollout in tqdm(range(num_rollouts), desc='Training'):
         buffer.clear()
         buffer.store_state(state)
 
+        print('\nGathering Experiences...')
         # rollout
         for i in range(ROLLOUT_SIZE):
             buffer = agent.get_action_and_value(buffer)
             state, reward, done = env.step(buffer.actions[-1], train_data_norm)
+            if done == 1:
+                state = env.reset(train_data_norm, True)
+                # break
             buffer.store_state(state)
             buffer.store_rewards(reward)
             buffer.store_dones(done)
-            if done == 1:
-                state = env.reset(train_data_norm)
-                # break
 
         next_value = 0
         if done != 1:
@@ -105,8 +119,10 @@ def train():
                 next_value = temp_buffer.values[-1]
             temp_buffer.clear()
 
+        print('Learning...')
         loss = agent.update(buffer, next_value)
-        print(f"\nRollout {rollout}/{num_rollouts} | Loss: {loss:.2f}")
+
+        print(f"\nRollout {rollout + 1}/{num_rollouts} | Loss: {loss:.2f}")
         # print(f"Trajectory length: {len(buffer.rewards)}")
 
     agent.save()

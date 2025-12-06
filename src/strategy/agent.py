@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 
 class Agent:
 
@@ -72,21 +73,21 @@ class Agent:
         self.model.train()
 
         buffer = self._compute_gae(buffer, next_value)
-
-        states = buffer.get('state')
-        actions = buffer.get('action')
-        log_probs = buffer.get('log_prob')
         rewards = buffer.get('reward')
-        advantages = buffer.get('advantage')
-        returns = buffer.get('return')
-
-        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-9)
 
         num_mini_batches = int(len(rewards) / self.mini_batch_size)
 
         losses = []
 
         for _ in range(self.num_epochs):
+            buffer.random_shuffling()
+            states = buffer.get('state')
+            actions = buffer.get('action')
+            log_probs = buffer.get('log_prob')
+            advantages = buffer.get('advantage')
+            returns = buffer.get('return')
+            advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-9)
+
             for mini_batch in range(num_mini_batches):
                 cur_states = states[mini_batch*self.mini_batch_size:(mini_batch+1)*self.mini_batch_size]
                 cur_actions = actions[mini_batch*self.mini_batch_size: (mini_batch+1)*self.mini_batch_size]
@@ -126,12 +127,3 @@ class Agent:
     def save(self):
         print("Saving the model...")
         torch.save(self.model.state_dict(), self.model_path)
-
-    def load(self):
-        print("Loading the model...")
-        try:
-            state_dict = torch.load(self.model_path, map_location=self.device)
-            self.model.load_state_dict(state_dict)
-            self.model.to(self.device)
-        except Exception as e:
-            print(f"--- Error loading models: {e} ---")

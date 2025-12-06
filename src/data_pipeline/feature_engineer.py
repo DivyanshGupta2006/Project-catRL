@@ -17,15 +17,39 @@ def create_features(type = 'training'):
             data = read_file.read_raw_val_data(symbol)
         elif type == 'test':
             data = read_file.read_raw_test_data(symbol)
-        data['rsi'] = ta.RSI(data['close'], timeperiod=14)
-        data['sma-50'] = ta.SMA(data['close'], timeperiod=50)
-        data['sma-100'] = ta.SMA(data['close'], timeperiod=100)
+
+        close = data['close']
+        high = data['high']
+        low = data['low']
+        openn = data['open']
+        volume = data['volume']
+
+        # momentum indicators
+        data['rsi'] = ta.RSI(close, timeperiod=14)
+        data['mfi'] = ta.MFI(high, low, close, volume.astype(float), timeperiod=14)
+        data['adx'] = ta.ADX(high, low, close, timeperiod=14)
+        data['bop'] = ta.BOP(open=data['open'], high=high, low=low, close=close)
+        slowk, slowd = ta.STOCH(high, low, close, fastk_period=14, slowk_period=3, slowk_matype=0, slowd_period=3,
+                                slowd_matype=0)
+        data['stochastic_oscillator-slow'] = slowd
+        macd, macdsignal, macdhist = ta.MACD(close, fastperiod=12, slowperiod=26, signalperiod=9)
+        data['macd-line'] = macd
+        data['macd-hist'] = macdhist
+
+        # trend indicators
         data['sma-200'] = ta.SMA(data['close'], timeperiod=200)
         data['ema-50'] = ta.EMA(data['close'], timeperiod=50)
-        data['ema-100'] = ta.EMA(data['close'], timeperiod=100)
-        data['ema-200'] = ta.EMA(data['close'], timeperiod=200)
+        data['tema-50'] = ta.TEMA(close, timeperiod=50)
+
+        # volume indicators
+        data['obv'] = ta.OBV(close, volume.astype(float))
+
+        # volatility indicators
         data['atr'] = ta.ATR(data['high'], data['low'], data['close'], timeperiod=14)
-        data['adx'] = ta.ADX(data['high'], data['low'], data['close'], timeperiod=14)
+
+        # other indicators
+        data['candle'] = (close - openn) / (high - low)
+
         symbol = symbol.split('/')[0]
         path = f'{symbol}.csv'
         data.to_csv(data_dir / path)

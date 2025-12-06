@@ -5,3 +5,6 @@ def convert_to_dict(row):
     candle_df = row.unstack(level=0)
     candle = candle_df.to_dict(orient='index')
     return candle
+
+def convert_to_tuple(string):
+    return ast.literal_eval(string)

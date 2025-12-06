@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-
+import random
 
 class Buffer:
     def __init__(self,
@@ -78,3 +78,17 @@ class Buffer:
         self.advantages = []
         self.returns = []
         self.dones = []
+
+    def random_shuffling(self):
+        zipped_data = list(zip(self.states, self.values, self.actions, self.log_probs, self.rewards, self.advantages, self.returns, self.dones))
+        random.shuffle(zipped_data)
+
+        new_states, new_values, new_actions, new_log_probs, new_rewards, new_advantages, new_returns, new_dones = zip(*zipped_data)
+        self.states = list(new_states)
+        self.values = list(new_values)
+        self.actions = list(new_actions)
+        self.log_probs = list(new_log_probs)
+        self.rewards = list(new_rewards)
+        self.advantages = list(new_advantages)
+        self.returns = list(new_returns)
+        self.dones = list(new_dones)
