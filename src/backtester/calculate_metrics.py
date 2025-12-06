@@ -21,6 +21,6 @@ def calculate_order_metrics(order):
     state = read_file.read_state()
 
     for crypto in order:
-        state['metrics']['transaction_cost'] += config['strategy']['transaction_cost_fraction'] * order[crypto]['order_amt'] * order[crypto]['order_price']
+        state['metrics']['transaction_cost'] += abs(config['strategy']['transaction_cost_fraction'] * order[crypto]['order_amt'] * order[crypto]['order_price'])
 
     update_state.update(state)

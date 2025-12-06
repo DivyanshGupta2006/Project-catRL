@@ -4,7 +4,7 @@ from collections import deque
 
 from src.strategy.model import Model
 from src.position_sizing import fiducia_calculator
-from src.utils import get_config, get_absolute_path
+from src.utils import get_config, get_absolute_path, read_file, convert
 
 config = get_config.read_yaml()
 
@@ -12,6 +12,7 @@ config = get_config.read_yaml()
 class Predictor:
 
     def __init__(self,
+                 data,
                  n_assets,
                  input_dim,
                  lstm_hidden_dim,
@@ -22,6 +23,7 @@ class Predictor:
                  symbols,
                  model_path,
                  device):
+        self.data = data
         self.n_assets = n_assets
         self.input_dim = input_dim
         self.lstm_hidden_dim = lstm_hidden_dim
@@ -77,11 +79,18 @@ class Predictor:
     def assign_prediction(self, candle):
         if not self.model_loaded:
             self.load_model()
-        current_vector = self._candle_to_vector(candle)
+
+        state = read_file.read_state()
+
+        row = self.data.iloc[state['timestep']]
+
+        candle_ = convert.convert_to_dict(row)
+
+        current_vector = self._candle_to_vector(candle_)
 
         self.buffer.append(current_vector)
 
-        if(len(self.buffer) < self.seq_len):
+        if len(self.buffer) < self.seq_len:
             for crypto in candle:
                 candle[crypto]['fiducia'] = 0.1
 
@@ -102,6 +111,9 @@ class Predictor:
 
         return candle
 
+
+data = read_file.read_merged_test_data(True)
+
 hp = config['hyperparameters']
 
 NUM_ASSETS = hp['num_assets']
@@ -116,7 +128,8 @@ symbols = config['data']['symbols']
 model_path = get_absolute_path.absolute(config['paths']['model_directory'] + 'model.pth')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-predictor = Predictor(NUM_ASSETS,
+predictor = Predictor(data,
+                      NUM_ASSETS,
                       INPUT_DIM,
                       LSTM_HIDDEN_DIM,
                       NUM_LSTM_LAYERS,
