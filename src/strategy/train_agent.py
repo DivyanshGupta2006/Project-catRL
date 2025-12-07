@@ -44,6 +44,30 @@ check_dir.check(get_absolute_path.absolute(config['paths']['report_directory'] +
 def train():
     print('Starting Training...')
 
+    print(f'Number of assets: {NUM_ASSETS}')
+    print(f'Input dim: {INPUT_DIM}')
+    print(f'Action dim: {ACTION_DIM}')
+    print(f'Num LSTM layers: {NUM_LSTM_LAYERS}')
+    print(f'Hidden state dim: {HIDDEN_STATE_DIM}')
+    print(f'Actor hidden dim: {ACTOR_HIDDEN_DIM}')
+    print(f'Critic hidden dim: {CRITIC_HIDDEN_DIM}')
+    print(f'Gamma: {GAMMA}')
+    print(f'Gae lambda: {GAE_LAMBDA}')
+    print(f'Clip epsilon: {CLIP_EPSILON}')
+    print(f'Value loss coef: {VALUE_LOSS_COEF}')
+    print(f'Entropy loss coef: {ENTROPY_LOSS_COEF}')
+    print(f'Sequence length: {SEQUENCE_LENGTH}')
+    print(f'Mini batch size: {MINI_BATCH_SIZE}')
+    print(f'rollout size: {ROLLOUT_SIZE}')
+    print(f'Num epochs: {NUM_EPOCHS}')
+    print(f'Learning rate: {LEARNING_RATE}')
+    print(f'Bound reward: {BOUND_REWARD_FACTOR}')
+    print(f'Symbols: {SYMBOLS}')
+    print(f'Capital: {CAPITAL}')
+    print(f'Model: {MODEL_PATH}')
+    print(f'Results path: {RESULTS_PATH}')
+
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
 
@@ -92,7 +116,7 @@ def train():
                          device=device)
 
     num_rollouts = (int)(len(train_data_norm) / ROLLOUT_SIZE)
-    num_rollouts = min(10, num_rollouts)
+    num_rollouts = min(20, num_rollouts)
     state = env.reset(train_data_norm)
 
     for rollout in tqdm(range(num_rollouts), desc='Training'):
@@ -122,8 +146,9 @@ def train():
         print('Learning...')
         loss = agent.update(buffer, next_value)
 
+        agent.save()
+
         print(f"\nRollout {rollout + 1}/{num_rollouts} | Loss: {loss:.2f}")
         # print(f"Trajectory length: {len(buffer.rewards)}")
 
-    agent.save()
     print('Training complete.')

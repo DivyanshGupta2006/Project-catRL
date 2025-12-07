@@ -18,7 +18,7 @@ class Environment:
                  results_path):
         self.data = data
         self.bound_reward_factor = bound_reward_factor
-        self.seq_len = seq_len
+        self.seq_len = 10 * seq_len
         self.capital = capital
         self.symbols = symbols
         self.results_path = results_path
@@ -85,7 +85,11 @@ class Environment:
             done = 1
         else:
             done = 0
-        reward = self._get_reward(self.prev_portfolio, new_portfolio, flag, fiduciae)
+
+        if done == 0:
+            reward = self._get_reward(self.prev_portfolio, new_portfolio, flag, fiduciae)
+        else:
+            reward = -9
 
         self.current_step += 1
         next_states = self._get_states(field_of_view)
@@ -95,7 +99,7 @@ class Environment:
     def reset(self, field_of_view, to_plot=False):
         update_state.set_state(self.capital)
         update_portfolio.set_portfolio()
-        self.current_step = self.seq_len
+        # self.current_step = self.seq_len
         self.prev_portfolio = self.capital
         if to_plot:
             plt.plot(self.equity)
