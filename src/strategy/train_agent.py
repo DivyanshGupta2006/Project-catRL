@@ -116,7 +116,7 @@ def train():
                          device=device)
 
     num_rollouts = (int)(len(train_data_norm) / ROLLOUT_SIZE)
-    num_rollouts = min(5, num_rollouts)
+    num_rollouts = min(10, num_rollouts)
     state = env.reset(train_data_norm)
 
     for rollout in tqdm(range(num_rollouts), desc='Training'):
