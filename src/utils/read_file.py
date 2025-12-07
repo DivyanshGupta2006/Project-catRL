@@ -16,7 +16,8 @@ def _get_path(key, file):
 def _read_csv(file):
     try:
         return pd.read_csv(file, index_col=[0], engine='pyarrow')
-    except:
+    except Exception as e:
+        print(e)
         return None
     
 @lru_cache(maxsize=n)

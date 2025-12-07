@@ -7,7 +7,7 @@ def execute(candle):
     portfolio = read_file.read_portfolio()
     state = read_file.read_state()
 
-    ret = None
+    ret = []
 
     for crypto in portfolio.index:
         # shorting
@@ -15,24 +15,30 @@ def execute(candle):
             if candle[crypto]['high'] >= portfolio.loc[crypto, 'stop_price']:
                 portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'stop_portion']
                 state['cash'] += (portfolio.loc[crypto, 'stop_portion'] * portfolio.loc[crypto, 'stop_price'])
-                ret = 'sl'
+                ret.append('sl')
 
             elif candle[crypto]['low'] <= portfolio.loc[crypto, 'take_price']:
                 portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'take_portion']
                 state['cash'] += (portfolio.loc[crypto, 'take_portion'] * portfolio.loc[crypto, 'take_price'])
-                ret = 'tp'
+                ret.append('tp')
+
+            else:
+                ret.append('na')
 
         # longing
         elif portfolio.loc[crypto, 'amt'] > 0:
             if candle[crypto]['low'] <= portfolio.loc[crypto, 'stop_price']:
                 portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'stop_portion']
                 state['cash'] += (portfolio.loc[crypto, 'stop_portion'] * portfolio.loc[crypto, 'stop_price'])
-                ret = 'sl'
+                ret.append('sl')
 
             elif candle[crypto]['high'] >= portfolio.loc[crypto, 'take_price']:
                 portfolio.loc[crypto, 'amt'] -= portfolio.loc[crypto, 'take_portion']
                 state['cash'] += (portfolio.loc[crypto, 'take_portion'] * portfolio.loc[crypto, 'take_price'])
-                ret = 'tp'
+                ret.append('tp')
+
+            else:
+                ret.append('na')
 
     update_portfolio.update(portfolio)
     update_state.update(state)

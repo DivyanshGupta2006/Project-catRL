@@ -5,17 +5,14 @@ from src.utils import get_config, get_absolute_path, check_dir, read_file
 config = get_config.read_yaml()
 
 def preprocess(type='training', to_normalize=True):
-    print("Preprocessing data....")
+    print(f"Preprocessing data for {type}....")
     symbols = config['data']['symbols']
     if type == 'training':
         data_dir = get_absolute_path.absolute(config['paths']['processed_training_data_directory'])
-        check_dir.check(data_dir)
     elif type == 'val':
         data_dir = get_absolute_path.absolute(config['paths']['processed_val_data_directory'])
-        check_dir.check(data_dir)
     elif type == 'test':
         data_dir = get_absolute_path.absolute(config['paths']['processed_test_data_directory'])
-        check_dir.check(data_dir)
 
     for symbol in symbols:
         if type == 'training':
@@ -51,5 +48,4 @@ def preprocess(type='training', to_normalize=True):
         data = data.ffill()
 
         symbol = symbol.split('/')[0]
-        path = f'{symbol}.csv'
-        data.to_csv(data_dir / path)
+        data.to_csv(get_absolute_path.join_path(data_dir, symbol, 'csv'))

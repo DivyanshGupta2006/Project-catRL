@@ -50,6 +50,6 @@ def backtest():
         plt.title('Equity Curve')
         plt.ylabel('Equity')
         plt.xlabel('Time')
-        plt.savefig(get_absolute_path.absolute(config['paths']['report_directory']) / 'equity-charts/' / f'equity_curve_backtest.png', dpi=300,
+        plt.savefig(get_absolute_path.absolute(config['paths']['report_directory']) / 'equity_charts/' / f'equity_curve_backtest.png', dpi=300,
                     bbox_inches='tight')
         plt.close()

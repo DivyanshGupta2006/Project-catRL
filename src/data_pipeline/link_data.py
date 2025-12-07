@@ -5,7 +5,7 @@ config = get_config.read_yaml()
 
 def link(data = 'val-test'):
     symbols = config['data']['symbols']
-    print("Linking data...")
+    print(f"Linking data for {data}...")
     for symbol in symbols:
         if data == 'training-val':
             data1 = read_file.read_raw_training_data(symbol)
@@ -14,8 +14,7 @@ def link(data = 'val-test'):
             data2 = pd.concat([data1, data2])
             data_dir = get_absolute_path.absolute(config['paths']['raw_val_data_directory'])
             symbol = symbol.split('/')[0]
-            path = f'{symbol}.csv'
-            data2.to_csv(data_dir / path)
+            data2.to_csv(get_absolute_path.join_path(data_dir, symbol, 'csv'))
         else:
             data1 = read_file.read_raw_val_data(symbol)
             data2 = read_file.read_raw_test_data(symbol)
@@ -23,5 +22,4 @@ def link(data = 'val-test'):
             data2 = pd.concat([data1, data2])
             data_dir = get_absolute_path.absolute(config['paths']['raw_test_data_directory'])
             symbol = symbol.split('/')[0]
-            path = f'{symbol}.csv'
-            data2.to_csv(data_dir / path)
+            data2.to_csv(get_absolute_path.join_path(data_dir, symbol, 'csv'))

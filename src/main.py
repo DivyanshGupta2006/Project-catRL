@@ -1,7 +1,8 @@
-from src.update_files import update_date
+from src.update_files import update_date, update_dir
 
 def start():
     update_date.update()
+    update_dir.update()
     choice = input("Would you like to update the data? (y/n): ")
     if choice.lower() == 'y':
         from src.update_files import update_data

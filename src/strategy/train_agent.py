@@ -36,10 +36,10 @@ BOUND_REWARD_FACTOR = hp['bound_reward_factor']
 SYMBOLS = config['data']['symbols']
 CAPITAL = config['strategy']['capital']
 MODEL_PATH = get_absolute_path.absolute(config['paths']['model_directory'] + "model.pth")
-RESULTS_PATH = get_absolute_path.absolute(config['paths']['report_directory'])  / 'equity-charts/'
+RESULTS_PATH = get_absolute_path.absolute(config['paths']['report_directory'])  / 'equity_charts/'
 
 check_dir.check(get_absolute_path.absolute(config['paths']['model_directory']))
-check_dir.check(get_absolute_path.absolute(config['paths']['report_directory'] + 'equity-charts/'))
+check_dir.check(get_absolute_path.absolute(config['paths']['report_directory'] + 'equity_charts/'))
 
 def train():
     print('Starting Training...')
@@ -116,7 +116,7 @@ def train():
                          device=device)
 
     num_rollouts = (int)(len(train_data_norm) / ROLLOUT_SIZE)
-    num_rollouts = min(20, num_rollouts)
+    num_rollouts = min(5, num_rollouts)
     state = env.reset(train_data_norm)
 
     for rollout in tqdm(range(num_rollouts), desc='Training'):

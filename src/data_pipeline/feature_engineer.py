@@ -5,10 +5,10 @@ from src.utils import get_config, read_file, get_absolute_path, check_dir
 config = get_config.read_yaml()
 
 def create_features(type = 'training'):
-    print('Creating features...')
+    print(f'Creating features for {type}...')
     data_dir = get_absolute_path.absolute(config['paths'][f'featured_{type}_data_directory'])
-    check_dir.check(data_dir)
     symbols = config['data']['symbols']
+    read_file.clear_caches()
     for symbol in symbols:
         data = pd.DataFrame()
         if type == 'training':
@@ -51,5 +51,4 @@ def create_features(type = 'training'):
         data['candle'] = (close - openn) / (high - low)
 
         symbol = symbol.split('/')[0]
-        path = f'{symbol}.csv'
-        data.to_csv(data_dir / path)
+        data.to_csv(get_absolute_path.join_path(data_dir, symbol, 'csv'))

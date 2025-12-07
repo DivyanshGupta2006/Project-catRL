@@ -13,7 +13,7 @@ def merge_normalized(type='training'):
         data_dir = get_absolute_path.absolute(config['paths']['merged_val_data_directory'])
     elif type == 'test':
         data_dir = get_absolute_path.absolute(config['paths']['merged_test_data_directory'])
-    check_dir.check(data_dir)
+
     merged_data = pd.DataFrame()
     for symbol in symbols:
         if type == 'training':
@@ -30,7 +30,7 @@ def merge_normalized(type='training'):
         else:
             merged_data = pd.merge(merged_data, data, how="inner", left_index=True, right_index=True)
 
-    merged_data.to_csv(data_dir / f"merged_{type}_normalized_data.csv")
+    merged_data.to_csv(get_absolute_path.join_path(data_dir, f'merged_{type}_normalized_data', 'csv'))
 
 def merge_unnormalized(type='training'):
     print(f'Merging {type} unnormalized data...')
@@ -42,7 +42,7 @@ def merge_unnormalized(type='training'):
         data_dir = get_absolute_path.absolute(config['paths']['merged_val_data_directory'])
     elif type == 'test':
         data_dir = get_absolute_path.absolute(config['paths']['merged_test_data_directory'])
-    check_dir.check(data_dir)
+
     merged_data = pd.DataFrame()
     for symbol in symbols:
         if type == 'training':
@@ -68,4 +68,4 @@ def merge_unnormalized(type='training'):
     else:
         merged_data = merged_data.loc['2025-04-01 00:00:00':'2025-09-30 23:00:00']
 
-    merged_data.to_csv(data_dir / f"merged_{type}_unnormalized_data.csv")
+    merged_data.to_csv(get_absolute_path.join_path(data_dir, f'merged_{type}_unnormalized_data', 'csv'))

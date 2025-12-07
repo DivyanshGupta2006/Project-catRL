@@ -18,7 +18,7 @@ class Environment:
                  results_path):
         self.data = data
         self.bound_reward_factor = bound_reward_factor
-        self.seq_len = 10 * seq_len
+        self.seq_len = seq_len
         self.capital = capital
         self.symbols = symbols
         self.results_path = results_path
@@ -26,7 +26,7 @@ class Environment:
         for idx, symbol in enumerate(self.symbols):
             self.symbols[idx] = symbol.split('/')[0]
 
-        self.current_step = self.seq_len
+        self.current_step = 10 * self.seq_len
         self.prev_portfolio = self.capital
         self.equity = []
         self.reset_counter = 0
@@ -40,14 +40,16 @@ class Environment:
             return None
 
     def _get_reward(self, prev, new, flag, fiduciae):
-        reward = 0
-        if flag is None:
-            reward = (new - prev) / prev
-        else:
-            if flag == 'sl':
-                reward = (new - prev - self.bound_reward_factor * prev) / prev
-            else:
-                reward = (new - prev + self.bound_reward_factor * prev) / prev
+        bound_reward = 0
+        for bound in flag:
+            if bound == 'sl':
+                bound_reward -= 1
+            elif bound == 'tp':
+                bound_reward += 1
+
+        bound_reward = bound_reward * self.bound_reward_factor * prev
+
+        reward = (new + bound_reward - prev) / prev
 
         for fiducia in fiduciae:
             if abs(fiducia) <= 1e-7:
@@ -90,6 +92,8 @@ class Environment:
             reward = self._get_reward(self.prev_portfolio, new_portfolio, flag, fiduciae)
         else:
             reward = -9
+
+        # reward = self._get_reward(self.prev_portfolio, new_portfolio, flag, fiduciae)
 
         self.current_step += 1
         next_states = self._get_states(field_of_view)

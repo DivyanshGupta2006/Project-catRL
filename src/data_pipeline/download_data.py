@@ -8,12 +8,12 @@ config = get_config.read_yaml()
 def download():
     symbols = config['data']['symbols']
     data_dir = get_absolute_path.absolute(config['paths']['raw_data_directory'])
-    check_dir.check(data_dir)
     try:
         exchange = getattr(ccxt, config['data']['exchange'])()
     except AttributeError:
         print(f"Error: The exchange '{config['data']['exchange']}' is not supported by ccxt.")
     for symbol in symbols:
+        print(f'Downloading {symbol}...')
         all_ohlcv = []
         start = exchange.parse8601(f'{config['data']['start_date']}T00:00:00Z')
         end = exchange.parse8601(f'{config['data']['end_date']}T23:59:59Z')
@@ -35,6 +35,4 @@ def download():
         data['timestamp'] = pd.to_datetime(data['timestamp'], unit='ms')
         data.set_index('timestamp', inplace=True)
         symbol = symbol.split('/')[0]
-        path = f'{symbol}.csv'
-        print(f'Downloading {symbol}...')
-        data.to_csv(data_dir / path)
+        data.to_csv(get_absolute_path.join_path(data_dir, symbol, 'csv'))
