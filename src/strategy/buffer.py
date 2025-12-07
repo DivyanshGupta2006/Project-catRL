@@ -52,11 +52,11 @@ class Buffer:
 
     def get(self, req='state'):
         if req == 'state':
-            return torch.tensor(np.array(self.states), dtype=torch.float32).to(self.device)
+            return torch.stack(self.states).to(dtype=torch.float32,device = self.device)
         if req == 'value':
-            return torch.tensor(np.array(self.values), dtype=torch.float32).to(self.device)
+            return torch.tensor(np.array(self.values),dtype=torch.float32).to(self.device)
         if req == 'action':
-            return torch.tensor(np.array(self.actions), dtype=torch.float32).to(self.device)
+            return torch.stack(self.actions).to(dtype=torch.float32,device = self.device)
         if req == 'log_prob':
             return torch.tensor(np.array(self.log_probs), dtype=torch.float32).to(self.device)
         if req == 'reward':

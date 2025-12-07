@@ -17,7 +17,7 @@ class Agent:
                  entropy_loss_coef,
                  model_path,
                  device):
-        self.model = model
+        self.model = model.to(device)
         self.gamma = gamma
         self.gae_lambda = gae_lambda
         self.clip_epsilon = clip_epsilon
@@ -50,7 +50,7 @@ class Agent:
         values = buffer.get('value')
         dones = buffer.get('done')
 
-        advantages = np.zeros_like(rewards)
+        advantages = np.zeros_like(rewards.cpu())
         last_gae_lambda = 0.0
 
         for t in reversed(range(len(rewards))):
