@@ -1,7 +1,6 @@
 import pandas as pd
 import json
 import os
-from functools import lru_cache
 
 from src.utils import get_absolute_path, get_config
 
@@ -19,80 +18,67 @@ def _read_csv(file):
     except Exception as e:
         print(e)
         return None
-    
-@lru_cache(maxsize=n)
+
 def read_raw_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('raw_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_raw_training_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('raw_training_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_raw_test_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('raw_test_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_raw_val_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('raw_val_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_featured_training_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('featured_training_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_featured_test_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('featured_test_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_featured_val_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('featured_val_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_preprocessed_training_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('processed_training_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_preprocessed_test_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('processed_test_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=n)
 def read_preprocessed_val_data(symbol):
     file_name = f"{symbol.split('/')[0]}.csv"
     path = _get_path('processed_val_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=3)
 def read_merged_training_data(normalized = True):
     file_name = 'merged_training_normalized_data.csv' if normalized else 'merged_training_unnormalized_data.csv'
     path = _get_path('merged_training_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=3)
 def read_merged_test_data(normalized = True):
     file_name = 'merged_test_normalized_data.csv' if normalized else 'merged_test_unnormalized_data.csv'
     path = _get_path('merged_test_data_directory', file_name)
     return _read_csv(path)
 
-@lru_cache(maxsize=3)
 def read_merged_val_data(normalized = True):
     file_name = 'merged_val_normalized_data.csv' if normalized else 'merged_val_unnormalized_data.csv'
     path = _get_path('merged_val_data_directory', file_name)
@@ -112,18 +98,3 @@ def read_state():
             return json.load(f)
     except Exception as e:
         return {}
-
-def clear_caches():
-    read_raw_data.cache_clear()
-    read_raw_training_data.cache_clear()
-    read_raw_test_data.cache_clear()
-    read_raw_val_data.cache_clear()
-    read_featured_training_data.cache_clear()
-    read_featured_test_data.cache_clear()
-    read_featured_val_data.cache_clear()
-    read_preprocessed_training_data.cache_clear()
-    read_preprocessed_test_data.cache_clear()
-    read_preprocessed_val_data.cache_clear()
-    read_merged_training_data.cache_clear()
-    read_merged_test_data.cache_clear()
-    read_merged_val_data.cache_clear()

@@ -5,7 +5,6 @@ from src.strategy.model import Model
 from src.strategy.agent import Agent
 from src.strategy.environment import Environment
 from src.strategy.buffer import Buffer
-from src.update_files import update_state, update_portfolio
 from src.utils import get_config, get_absolute_path, read_file, convert, check_dir
 
 config = get_config.read_yaml()

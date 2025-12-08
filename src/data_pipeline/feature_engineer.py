@@ -8,7 +8,6 @@ def create_features(type = 'training'):
     print(f'Creating features for {type}...')
     data_dir = get_absolute_path.absolute(config['paths'][f'featured_{type}_data_directory'])
     symbols = config['data']['symbols']
-    read_file.clear_caches()
     for symbol in symbols:
         data = pd.DataFrame()
         if type == 'training':
