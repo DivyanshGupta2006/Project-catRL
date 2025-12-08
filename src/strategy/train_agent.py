@@ -1,5 +1,6 @@
 import torch
 from tqdm import tqdm
+import gc
 
 from src.strategy.model import Model
 from src.strategy.agent import Agent
@@ -154,6 +155,13 @@ def train():
         agent.save()
 
         print(f"\nRollout {rollout + 1}/{num_rollouts} | Loss: {loss:.2f}")
-        # print(f"Trajectory length: {len(buffer.rewards)}")
+
+    del agent
+    del model
+    del env
+    del buffer
+    del temp_buffer
+
+    gc.collect()
 
     print('Training complete.')

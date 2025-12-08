@@ -116,6 +116,7 @@ class Environment:
             plt.xlabel('Time')
             # plt.show()
             plt.savefig(self.results_path / f'equity_curve{self.reset_counter}.png', dpi=300, bbox_inches='tight')
+            plt.clf()
             plt.close()
         self.equity = []
         self.reset_counter += 1

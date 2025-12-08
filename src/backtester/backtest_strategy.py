@@ -55,6 +55,7 @@ def backtest(data, label):
         plt.xlabel('Time')
         plt.savefig(get_absolute_path.absolute(config['paths']['report_directory']) / 'equity_charts/' / f'equity_curve_backtest_{label}.png', dpi=300,
                     bbox_inches='tight')
+        plt.clf()
         plt.close()
 
 def backtest_on_val():
