@@ -57,7 +57,7 @@ class Environment:
 
         return reward
 
-    def step(self, raw_action, field_of_view):
+    def step(self, raw_action, field_of_view, state, portfolio):
         row1 = self.data.iloc[self.current_step - 1]
         row2 = self.data.iloc[self.current_step]
         prev_candle = convert.convert_to_dict(row1)
@@ -70,18 +70,18 @@ class Environment:
         for idx, crypto in enumerate(self.symbols):
             prev_candle[crypto]['fiducia'] = fiduciae[idx]
 
-        prev_candle = slippage.get_order_price(prev_candle, self.prev_portfolio)
-        prev_candle = amount_calculator.calculate(prev_candle, self.prev_portfolio)
+        prev_candle = slippage.get_order_price(prev_candle, self.prev_portfolio, portfolio)
+        prev_candle = amount_calculator.calculate(prev_candle, self.prev_portfolio, portfolio)
         prev_candle = stop_loss.get_stop_loss(prev_candle)
         prev_candle = take_profit.get_take_profit(prev_candle)
 
-        order = place_order.place(prev_candle)
-        execute_order.execute(order)
-        calculate_metrics.calculate_order_metrics(order)
-        flag = execute_SL_TP.execute(candle)
-        calculate_metrics.calculate_candle_metrics(candle)
+        order = place_order.place(prev_candle, portfolio)
+        state, portfolio = execute_order.execute(order, state, portfolio)
+        state = calculate_metrics.calculate_order_metrics(order, state)
+        flag, state, portfolio = execute_SL_TP.execute(candle, state, portfolio)
+        state = calculate_metrics.calculate_candle_metrics(candle, state, portfolio)
 
-        new_portfolio = portfolio_calculator.calculate(candle)
+        new_portfolio = portfolio_calculator.calculate(candle, state, portfolio)
         self.equity.append(new_portfolio)
         if(new_portfolio < 0.001 * self.capital):
             done = 1
@@ -96,9 +96,13 @@ class Environment:
         # reward = self._get_reward(self.prev_portfolio, new_portfolio, flag, fiduciae)
 
         self.current_step += 1
+        if self.current_step >= len(self.data):
+            self.current_step = self.seq_len
+            done = 1
+
         next_states = self._get_states(field_of_view)
 
-        return next_states, reward, done
+        return next_states, reward, done, state, portfolio
 
     def reset(self, field_of_view, to_plot=False):
         update_state.set_state(self.capital)

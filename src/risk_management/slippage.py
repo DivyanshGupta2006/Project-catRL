@@ -1,10 +1,8 @@
-from src.utils import get_config, read_file
+from src.utils import get_config
 
 config = get_config.read_yaml()
 
-def get_order_price(candle,Pt):
-    portfolio = read_file.read_portfolio()
-
+def get_order_price(candle, Pt, portfolio):
     for crypto in candle:
         a = candle[crypto]['close']
         S = config['strategy']['slippage_cost_fraction']

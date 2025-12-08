@@ -1,7 +1,4 @@
-from src.utils import read_file
-
-def place(candle):
-    portfolio = read_file.read_portfolio()
+def place(candle, portfolio):
     order = {}
 
     for crypto in candle:

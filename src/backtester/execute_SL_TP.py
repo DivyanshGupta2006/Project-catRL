@@ -1,12 +1,8 @@
-from src.utils import get_config, read_file
-from src.update_files import update_state, update_portfolio
+from src.utils import get_config
 
 config = get_config.read_yaml()
 
-def execute(candle):
-    portfolio = read_file.read_portfolio()
-    state = read_file.read_state()
-
+def execute(candle, state, portfolio):
     ret = []
 
     for crypto in portfolio.index:
@@ -40,6 +36,4 @@ def execute(candle):
             else:
                 ret.append('na')
 
-    update_portfolio.update(portfolio)
-    update_state.update(state)
-    return ret
+    return ret, state, portfolio

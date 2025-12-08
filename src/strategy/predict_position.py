@@ -112,7 +112,7 @@ class Predictor:
         return candle
 
 
-data = read_file.read_merged_test_data(True)
+data = None
 
 hp = config['hyperparameters']
 
@@ -140,6 +140,36 @@ predictor = Predictor(data,
                       model_path,
                       device)
 
+def assign_field_of_view(field_of_view):
+    global data
+    global predictor
+    data = field_of_view
+
+    hp = config['hyperparameters']
+
+    NUM_ASSETS = hp['num_assets']
+    INPUT_DIM = hp['input_dim']
+    LSTM_HIDDEN_DIM = hp['hidden_state_dim']
+    NUM_LSTM_LAYERS = hp['num_lstm_layers']
+    ACTOR_HIDDEN_DIM = hp['actor_hidden_dim']
+    CRITIC_HIDDEN_DIM = hp['critic_hidden_dim']
+    SEQUENCE_LENGTH = hp['seq_len']
+
+    symbols = config['data']['symbols']
+    model_path = get_absolute_path.absolute(config['paths']['model_directory'] + 'model.pth')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    predictor = Predictor(data,
+                          NUM_ASSETS,
+                          INPUT_DIM,
+                          LSTM_HIDDEN_DIM,
+                          NUM_LSTM_LAYERS,
+                          ACTOR_HIDDEN_DIM,
+                          CRITIC_HIDDEN_DIM,
+                          SEQUENCE_LENGTH,
+                          symbols,
+                          model_path,
+                          device)
 
 def predict(candle):
     return predictor.assign_prediction(candle)

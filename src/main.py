@@ -10,8 +10,20 @@ def start():
     choice = input("Would you like to train the agent? (y/n): ")
     if choice.lower() == 'y':
         from src.strategy import train_agent
-        train_agent.train()
-    choice = input("Would you like to backtest the strategy? (y/n): ")
-    if choice.lower() == 'y':
         from src.backtester import backtest_strategy
-        backtest_strategy.backtest()
+        train_agent.train()
+        print('Backtesting on validation set...')
+        backtest_strategy.backtest_on_val()
+        print('Backtesting on test set...')
+        backtest_strategy.backtest_on_test()
+
+    else:
+        choice = input("Would you like to backtest the strategy on validation set? (y/n): ")
+        if choice.lower() == 'y':
+            from src.backtester import backtest_strategy
+            backtest_strategy.backtest_on_val()
+
+        choice = input("Would you like to backtest the strategy on test set? (y/n): ")
+        if choice.lower() == 'y':
+            from src.backtester import backtest_strategy
+            backtest_strategy.backtest_on_test()

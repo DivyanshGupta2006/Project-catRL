@@ -13,7 +13,6 @@ paths:
   merged_training_data_directory: "data/training/merged"
   merged_val_data_directory: "data/validation/merged"
   merged_test_data_directory: "data/test/merged"
-  preprocessor_directory: "models/preprocessor/"
   report_directory: "reports/"
   model_directory: "models/"
   env_directory: ".env"
@@ -59,16 +58,21 @@ hyperparameters:
   action_dim: 10
   num_lstm_layers: 1
   hidden_state_dim: 512
-  actor_hidden_dim: 64
-  critic_hidden_dim: 64
+  actor_hidden_dim:
+    - 128
+    - 32
+  critic_hidden_dim:
+    - 128
+    - 32
   gamma: 0.99
   gae_lambda: 0.95
   clip_epsilon: 0.2
   value_loss_coef: 0.5
   entropy_loss_coef: 0.1
   seq_len: 96
-  mini_batch_size: 16
-  rollout_size: 256
+  mini_batch_size: 32
+  rollout_size: 512
+  num_rollouts: 10
   num_epochs: 10
   learning_rate: 0.001
   bound_reward_factor: 0.11

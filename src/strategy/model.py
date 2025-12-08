@@ -25,15 +25,29 @@ class Model(nn.Module):
             num_layers=self.n_lstm_layers,
             batch_first=True)
 
-        self.actor_head = nn.Sequential(
-            nn.Linear(self.lstm_hidden_dim, self.actor_hidden_dim),
-            nn.ReLU(),
-            nn.Linear(self.actor_hidden_dim, self.n_assets * 2))
+        layers = []
+        num_layers = len(self.actor_hidden_dim) - 1
 
-        self.critic_head = nn.Sequential(
-            nn.Linear(self.lstm_hidden_dim, self.critic_hidden_dim),
-            nn.ReLU(),
-            nn.Linear(self.critic_hidden_dim, 1))
+        layers.append(nn.Linear(self.lstm_hidden_dim, self.actor_hidden_dim[0]))
+        layers.append(nn.ReLU())
+        for i in range(num_layers):
+            layers.append(nn.Linear(self.actor_hidden_dim[i], self.actor_hidden_dim[i + 1]))
+            layers.append(nn.ReLU())
+        layers.append(nn.Linear(self.actor_hidden_dim[-1], 2 * self.n_assets))
+
+        self.actor_head = nn.Sequential(*layers)
+
+        layers = []
+        num_layers = len(self.critic_hidden_dim) - 1
+
+        layers.append(nn.Linear(self.lstm_hidden_dim, self.critic_hidden_dim[0]))
+        layers.append(nn.ReLU())
+        for i in range(num_layers):
+            layers.append(nn.Linear(self.critic_hidden_dim[i], self.critic_hidden_dim[i + 1]))
+            layers.append(nn.ReLU())
+        layers.append(nn.Linear(self.critic_hidden_dim[-1], 1))
+
+        self.critic_head = nn.Sequential(*layers)
 
     def init_hidden_state(self, batch_size=1, device='cpu'):
         h_0 = torch.zeros(self.n_lstm_layers, batch_size, self.lstm_hidden_dim).to(device)

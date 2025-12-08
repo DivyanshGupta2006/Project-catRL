@@ -2,7 +2,6 @@ import sys
 import builtins
 import os
 import re
-import time
 from datetime import datetime
 from pywebio import start_server, config
 from pywebio.output import put_text, put_html, put_scope, use_scope, scroll_to, put_image, put_buttons, toast, \
@@ -36,7 +35,7 @@ def save_current_page(title):
 
     toast(f"Page saved successfully to {filename}!", color='success')
 
-def show_images_in_terminal(directory, alll):
+def show_images_in_terminal(directory, alll, specific):
     if alll:
         valid_exts = ('.png', '.jpg', '.jpeg', '.gif')
         with use_scope('terminal-log', clear=False):
@@ -51,7 +50,7 @@ def show_images_in_terminal(directory, alll):
     else:
         with use_scope('terminal-log', clear=False):
             try:
-                img_file = 'equity_curve_backtest.png'
+                img_file = f'equity_curve_backtest_{specific}.png'
                 path = os.path.join(directory, img_file)
                 with open(path, 'rb') as f:
                     put_image(f.read()).style('max-width: 80%; margin: 10px 0; border: 2px solid #30363d; display: block;')
@@ -142,7 +141,7 @@ def web_terminal_input(prompt='', *args, **kwargs):
 def app():
     put_html("""
     <style>
-        body { background-color: #0d1117; color: #00ff00; font-family: 'Courier New', monospace; }
+        body { background-color: #0d1117; color: #00ff00; font-family: 'Courier New', monospace; padding-bottom: 80px !important; }
         .webio-input-panel { background-color: #161b22 !important; }
         input.form-control { background-color: #0d1117 !important; color: #00ff00 !important; border: 1px solid #30363d; font-family: 'Courier New', monospace; }
         footer { display: none !important; }
@@ -169,30 +168,23 @@ def app():
     put_buttons(['Save as HTML'], onclick=[lambda : save_current_page(title)])
 
     try:
-        import tqdm.std
         global title
         global desc
         global func
-        if not getattr(tqdm.std, '_patched', False):
-            _original_tqdm_init = tqdm.std.tqdm.__init__
-
-            def patched_tqdm_init(self, *args, **kwargs):
-                if 'mininterval' not in kwargs: kwargs['mininterval'] = 0.125
-                _original_tqdm_init(self, *args, **kwargs)
-
-            tqdm.std.tqdm.__init__ = patched_tqdm_init
-            tqdm.std._patched = True
         title = input("Enter the title for experiment: ")
         desc = input("Enter the description for experiment: ")
         print(f'[Title]: {title}')
         print(f'[Description]: {desc}\n')
         func()
         sys.stdout.flush()
-        print(f'Displaying the equity curve obtained during back-testing: ')
-        _ = show_images_in_terminal(equity_charts_dir, False)
+        print(f'Displaying the equity curve obtained during back-testing on validation set: ')
+        _ = show_images_in_terminal(equity_charts_dir, False, 'val')
+        print(' ')
+        print(f'Displaying the equity curve obtained during back-testing on test set: ')
+        _ = show_images_in_terminal(equity_charts_dir, False, 'test')
         print(' ')
         print(f'Displaying the terminated trajectories obtained during training: ')
-        total = show_images_in_terminal(equity_charts_dir, True) + 1
+        total = show_images_in_terminal(equity_charts_dir, True, None) + 1
         print(f'Total {total} trajectories')
         if total != 0:
               print(f'Average trajectory length: {configg['hyperparameters']['rollout_size'] * 10 / total}')

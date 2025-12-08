@@ -5,6 +5,7 @@ from src.strategy.model import Model
 from src.strategy.agent import Agent
 from src.strategy.environment import Environment
 from src.strategy.buffer import Buffer
+from src.update_files import update_state, update_portfolio
 from src.utils import get_config, get_absolute_path, read_file, convert, check_dir
 
 config = get_config.read_yaml()
@@ -29,6 +30,7 @@ ENTROPY_LOSS_COEF = hp['entropy_loss_coef']
 SEQUENCE_LENGTH = hp['seq_len']
 MINI_BATCH_SIZE = hp['mini_batch_size']
 ROLLOUT_SIZE = hp['rollout_size']
+NUM_ROLLOUTS = hp['num_rollouts']
 NUM_EPOCHS = hp['num_epochs']
 LEARNING_RATE = hp['learning_rate']
 BOUND_REWARD_FACTOR = hp['bound_reward_factor']
@@ -58,15 +60,13 @@ def train():
     print(f'Entropy loss coef: {ENTROPY_LOSS_COEF}')
     print(f'Sequence length: {SEQUENCE_LENGTH}')
     print(f'Mini batch size: {MINI_BATCH_SIZE}')
-    print(f'rollout size: {ROLLOUT_SIZE}')
+    print(f'Rollout size: {ROLLOUT_SIZE}')
+    print(f'Num rollouts: {NUM_ROLLOUTS}')
     print(f'Num epochs: {NUM_EPOCHS}')
     print(f'Learning rate: {LEARNING_RATE}')
     print(f'Bound reward: {BOUND_REWARD_FACTOR}')
     print(f'Symbols: {SYMBOLS}')
     print(f'Capital: {CAPITAL}')
-    print(f'Model: {MODEL_PATH}')
-    print(f'Results path: {RESULTS_PATH}')
-
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
@@ -115,9 +115,13 @@ def train():
     temp_buffer = Buffer(total_rollout_size=1,
                          device=device)
 
-    num_rollouts = (int)(len(train_data_norm) / ROLLOUT_SIZE)
-    num_rollouts = min(10, num_rollouts)
+    if NUM_ROLLOUTS == 'd':
+        num_rollouts = (int)(len(train_data_norm) / ROLLOUT_SIZE)
+    else:
+        num_rollouts = NUM_ROLLOUTS
     state = env.reset(train_data_norm)
+    state_metric = read_file.read_state()
+    portfolio = read_file.read_portfolio()
 
     for rollout in tqdm(range(num_rollouts), desc='Training'):
         buffer.clear()
@@ -127,9 +131,11 @@ def train():
         # rollout
         for i in range(ROLLOUT_SIZE):
             buffer = agent.get_action_and_value(buffer)
-            state, reward, done = env.step(buffer.actions[-1], train_data_norm)
+            state, reward, done, state_metric, portfolio = env.step(buffer.actions[-1], train_data_norm, state_metric, portfolio)
             if done == 1:
                 state = env.reset(train_data_norm, True)
+                state_metric = read_file.read_state()
+                portfolio = read_file.read_portfolio()
                 # break
             buffer.store_state(state)
             buffer.store_rewards(reward)
