@@ -187,7 +187,7 @@ def app():
         total = show_images_in_terminal(equity_charts_dir, True, None) + 1
         print(f'Total {total} trajectories')
         if total != 0:
-              print(f'Average trajectory length: {configg['hyperparameters']['rollout_size'] * 10 / total}')
+              print(f'Average trajectory length: {configg['hyperparameters']['rollout_size'] * configg['hyperparameters']['num_rollouts'] / total}')
         print("\n[Run Successful!]")
     except Exception as e:
         print(f"\n[Error]: {e}")
