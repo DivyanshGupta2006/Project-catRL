@@ -1,9 +1,9 @@
 import warnings
 warnings.filterwarnings('ignore')
 
-from src.interface import app
+from src.interface.app import start
 from src import main
 
 if __name__ == '__main__':
-    app.run(main.start)
+    start()
     # main.start()
