@@ -13,6 +13,7 @@ paths:
   merged_training_data_directory: "data/training/merged"
   merged_val_data_directory: "data/validation/merged"
   merged_test_data_directory: "data/test/merged"
+  asset_directory: "assets/"
   report_directory: "reports/"
   model_directory: "models/"
   env_directory: ".env"

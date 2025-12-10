@@ -1,56 +1,57 @@
 import sys
 import os
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QIcon
 
-# Local imports
-# We assume these files exist and are correct as per your instructions
+# Imports
 from src.interface.theme import apply_dark_theme
 from src.interface.window import TradingDashboard
-from src.utils import get_config, get_absolute_path, check_dir
+from src.interface.animation import CatRLSplash  # <--- Import new splash
+from src.utils import get_config, get_absolute_path
+
+# Global references to keep windows from being garbage collected
+window = None
+splash = None
 
 
 def start():
-    """
-    Initializes and launches the PyQt6 Trading Dashboard.
-    """
-    # 1. Load Configuration
-    # We load it here so we can catch errors if the yaml file is missing or malformed
+    global window, splash
+
+    # 1. Config Loading
     try:
         config = get_config.read_yaml()
-    except Exception as e:
-        print(f"CRITICAL ERROR: Could not load configuration. {e}")
-        return
+    except:
+        config = {}  # Safe fallback
 
-    # 2. Setup Directories
-    # Use os.path.join for safe path construction across different operating systems
-    report_dir_key = config['paths']['report_directory']
+    report_path = config['paths']['report_directory']
+    save_dir = get_absolute_path.absolute(report_path + 'experiments/')
 
-    # Construct the full path: report_directory/experiments/
-    experiments_path = report_dir_key + 'experiments/'
-
-    # Get absolute path using your utility
-    save_dir = get_absolute_path.absolute(experiments_path)
-    check_dir.check(save_dir)
-
-    # 3. Initialize QApplication
-    # Check if an instance already exists to prevent 'QApplication created before...' errors
+    # 2. App Init
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
 
-    # 4. Apply Visual Theme
-    # (We will make this function much better in the next step: theme.py)
+    # Apply Theme
     apply_dark_theme(app)
 
-    # 5. Launch Main Window
-    # We pass the save_dir so the window knows where to save/load sessions
-    window = TradingDashboard(save_dir)
+    # Set Taskbar Icon
+    if os.path.exists('icon.ico'):
+        app.setWindowIcon(QIcon('icon.ico'))
 
-    # Set a professional title and icon here if needed,
-    # though we can also do it inside the Window class.
-    window.setWindowTitle("CatRL - Algorithmic Trading Environment")
+    # 3. DEFINE TRANSITION LOGIC
+    def show_main_window():
+        global window, splash
+        # Initialize Main Window
+        window = TradingDashboard(save_dir)
+        window.show()
+        # Close Splash
+        if splash:
+            splash.close()
 
-    window.show()
+    # 4. LAUNCH SPLASH
+    splash = CatRLSplash()
+    # When splash signals 'finished', run show_main_window
+    splash.finished.connect(show_main_window)
+    splash.show()
 
-    # 6. Start Event Loop
     sys.exit(app.exec())

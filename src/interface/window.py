@@ -7,10 +7,9 @@ from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QGroupBox, QLineEdit, QTabWidget, QScrollArea,
                              QSplitter, QFileDialog, QMessageBox, QFrame,
                              QProgressBar, QFormLayout, QDoubleSpinBox, QSpinBox,
-                             QStackedWidget, QTableWidget, QTableWidgetItem,
-                             QHeaderView, QSizePolicy)
-from PyQt6.QtCore import Qt, QSize, QTimer
-from PyQt6.QtGui import QPixmap, QFont, QColor, QIcon, QAction
+                             QTableWidget, QTableWidgetItem, QHeaderView)
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QPixmap, QFont, QColor, QIcon
 
 # Import Worker from your local structure
 from src.interface.workers import Worker
@@ -20,123 +19,7 @@ from src.interface.theme import PROGRESS_BAR_STYLE, INPUT_STYLE, TABLE_STYLE
 DEFAULT_SAVE_DIR = ""
 
 
-# --- 1. THE HOME SCREEN ---
-class HomeScreen(QWidget):
-    def __init__(self, switch_callback):
-        super().__init__()
-        self.switch_callback = switch_callback
-        self.init_ui()
-
-    def init_ui(self):
-        # Main Layout (Centers everything)
-        main_layout = QVBoxLayout(self)
-        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        # 1. Container Frame (Keeps elements grouped tightly)
-        container = QFrame()
-        container.setFixedWidth(700)
-        # Optional: Add a subtle border or background to the card if desired
-        # container.setStyleSheet("background-color: #151515; border-radius: 20px; border: 1px solid #222;")
-
-        layout = QVBoxLayout(container)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.setSpacing(10)  # Control vertical rhythm
-
-        # 2. Branding Area
-        # Logo
-        lbl_logo = QLabel("CAT<font color='#2e8b57'>RL</font>")
-        lbl_logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lbl_logo.setStyleSheet("""
-            font-size: 100px; 
-            font-weight: 900; 
-            color: #ffffff; 
-            font-family: 'Segoe UI', sans-serif;
-            margin-bottom: -10px;
-        """)
-
-        # Subtitle (Cinematic spacing)
-        lbl_subtitle = QLabel("AUTONOMOUS CRYPTO TRADING AGENT")
-        lbl_subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        lbl_subtitle.setStyleSheet("""
-            font-size: 14px; 
-            color: #888; 
-            letter-spacing: 8px; 
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 40px;
-        """)
-
-        # 3. Status Pill (The "Tech" looking badge)
-        status_pill = QFrame()
-        status_pill.setFixedHeight(40)
-        status_pill.setFixedWidth(240)
-        status_pill.setStyleSheet("""
-            QFrame {
-                background-color: #1a1a1a;
-                border-radius: 20px;
-                border: 1px solid #333;
-            }
-        """)
-
-        pill_layout = QHBoxLayout(status_pill)
-        pill_layout.setContentsMargins(15, 0, 15, 0)
-        pill_layout.setSpacing(10)
-        pill_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        lbl_dot = QLabel("●")
-        lbl_dot.setStyleSheet("color: #00e676; font-size: 16px; border: none; background: transparent;")
-
-        lbl_stat = QLabel("SYSTEM OPERATIONAL")
-        lbl_stat.setStyleSheet("""
-            color: #00e676; 
-            font-weight: bold; 
-            font-size: 11px; 
-            border: none; 
-            background: transparent; 
-            letter-spacing: 1px;
-        """)
-
-        pill_layout.addWidget(lbl_dot)
-        pill_layout.addWidget(lbl_stat)
-
-        # 4. Big Action Button
-        btn_enter = QPushButton("LAUNCH DASHBOARD")
-        btn_enter.setFixedSize(320, 65)
-        btn_enter.setCursor(Qt.CursorShape.PointingHandCursor)
-        # Using a gradient to match your new theme.py
-        btn_enter.setStyleSheet("""
-            QPushButton {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2e8b57, stop:1 #3cb371);
-                color: white;
-                font-size: 15px;
-                font-weight: bold;
-                border-radius: 8px;
-                letter-spacing: 1px;
-                border: none;
-            }
-            QPushButton:hover {
-                background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #3cb371, stop:1 #55ff99);
-                border: 2px solid #b2fab4; /* Subtle glow border */
-            }
-            QPushButton:pressed {
-                background-color: #1b5e3a;
-                margin-top: 2px;
-            }
-        """)
-        btn_enter.clicked.connect(self.switch_callback)
-
-        # Assemble
-        layout.addWidget(lbl_logo)
-        layout.addWidget(lbl_subtitle)
-        layout.addSpacing(10)
-        layout.addWidget(status_pill, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addSpacing(60)
-        layout.addWidget(btn_enter, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        main_layout.addWidget(container)
-
-
-# --- 2. LIVE TRADING TAB (Improved) ---
+# --- 1. LIVE TRADING TAB ---
 class TradeTab(QWidget):
     def __init__(self):
         super().__init__()
@@ -147,7 +30,7 @@ class TradeTab(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(20)
 
-        # Top Header
+        # Header
         header = QLabel("LIVE MARKET OVERVIEW")
         header.setStyleSheet("font-size: 22px; font-weight: bold; color: #ccc;")
         layout.addWidget(header)
@@ -161,7 +44,7 @@ class TradeTab(QWidget):
         chart_frame.setStyleSheet("background-color: #1e1e1e; border: 1px solid #333; border-radius: 8px;")
         chart_layout = QVBoxLayout(chart_frame)
 
-        lbl_chart = QLabel("[ REAL-TIME CANDLESTICK CHART PLACEHOLDER ]\n(Awaiting API Connection)")
+        lbl_chart = QLabel("[ REAL-TIME CANDLESTICK CHART MODULE ]\n(Waiting for Data Feed...)")
         lbl_chart.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lbl_chart.setStyleSheet("color: #555; font-size: 16px; font-weight: bold;")
         chart_layout.addWidget(lbl_chart)
@@ -175,13 +58,14 @@ class TradeTab(QWidget):
         lbl_table.setStyleSheet("font-size: 14px; font-weight: bold; color: #2e8b57; margin-bottom: 5px;")
 
         self.positions_table = QTableWidget(0, 5)
-        self.positions_table.setHorizontalHeaderLabels(["Asset", "Side", "Entry Price", "Current Price", "PnL %"])
+        self.positions_table.setHorizontalHeaderLabels(["Asset", "Side", "Entry Price", "Mark Price", "PnL %"])
         self.positions_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.positions_table.setStyleSheet(TABLE_STYLE)
         self.positions_table.verticalHeader().setVisible(False)
 
-        # Add dummy row for visual effect
-        self.add_dummy_row("BTC/USDT", "LONG", "96,500.00", "98,200.00", "+1.76%")
+        # Add dummy row for visual confirmation
+        self.add_dummy_row("ETH/USDT", "LONG", "3,450.00", "3,510.00", "+1.74%")
+        self.add_dummy_row("BTC/USDT", "SHORT", "98,200.00", "98,150.00", "+0.05%")
 
         table_layout.addWidget(lbl_table)
         table_layout.addWidget(self.positions_table)
@@ -203,11 +87,12 @@ class TradeTab(QWidget):
         self.positions_table.setItem(row, 3, QTableWidgetItem(curr))
 
         item_pnl = QTableWidgetItem(pnl)
+        # Green for positive, Red for negative
         item_pnl.setForeground(QColor("#00ff00") if "+" in pnl else QColor("#ff0000"))
         self.positions_table.setItem(row, 4, item_pnl)
 
 
-# --- 3. SETTINGS TAB (Improved) ---
+# --- 2. SETTINGS TAB ---
 class SettingsTab(QWidget):
     def __init__(self):
         super().__init__()
@@ -226,8 +111,10 @@ class SettingsTab(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("border: none; background: transparent;")
 
         content_widget = QWidget()
+        content_widget.setStyleSheet("background: transparent;")
         form_layout = QVBoxLayout(content_widget)
         form_layout.setSpacing(25)
 
@@ -289,7 +176,7 @@ class SettingsTab(QWidget):
         btn_reset = QPushButton("Reset to Defaults")
         btn_reset.setFixedWidth(150)
         btn_reset.setStyleSheet(
-            "background-color: #444; color: white; border: 1px solid #555; border-radius: 4px; padding: 5px;")
+            "background-color: #333; color: white; border: 1px solid #555; border-radius: 4px; padding: 6px;")
         btn_reset.clicked.connect(self.reset_defaults)
         layout.addWidget(btn_reset, alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -319,7 +206,7 @@ class SettingsTab(QWidget):
         if "initial_balance" in params: self.sb_balance.setValue(params["initial_balance"])
 
 
-# --- 4. EXPERIMENT TAB (The Core) ---
+# --- 3. EXPERIMENT TAB ---
 class ExperimentTab(QWidget):
     def __init__(self, settings_tab_ref):
         super().__init__()
@@ -335,7 +222,7 @@ class ExperimentTab(QWidget):
         # --- LEFT PANEL (Controls) ---
         left_panel = QFrame()
         left_panel.setFixedWidth(320)
-        left_panel.setStyleSheet("background-color: #252525; border-right: 1px solid #333;")
+        left_panel.setStyleSheet("background-color: #1e1e1e; border-right: 1px solid #333;")
         left_layout = QVBoxLayout(left_panel)
         left_layout.setSpacing(15)
 
@@ -346,12 +233,10 @@ class ExperimentTab(QWidget):
 
         self.input_title = QLineEdit()
         self.input_title.setPlaceholderText("e.g. DQN_BTC_1h_v1")
-        self.input_title.setStyleSheet("padding: 8px; background-color: #1e1e1e; border: 1px solid #444; color: white;")
 
         self.input_desc = QTextEdit()
         self.input_desc.setPlaceholderText("Experiment notes...")
         self.input_desc.setMaximumHeight(80)
-        self.input_desc.setStyleSheet("padding: 8px; background-color: #1e1e1e; border: 1px solid #444; color: white;")
 
         meta_layout.addWidget(QLabel("Title:"))
         meta_layout.addWidget(self.input_title)
@@ -370,7 +255,6 @@ class ExperimentTab(QWidget):
         self.cb_bt_val = QCheckBox("3. Backtest: Validation")
         self.cb_bt_test = QCheckBox("4. Backtest: Test")
 
-        # Logic: If training, backtests are often automatic, but let's keep it flexible
         self.cb_train.toggled.connect(self.handle_train_toggle)
 
         controls_layout.addWidget(self.cb_update)
@@ -384,17 +268,23 @@ class ExperimentTab(QWidget):
         self.btn_start.setMinimumHeight(50)
         self.btn_start.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_start.setStyleSheet("""
-            QPushButton { background-color: #2e8b57; font-weight: bold; font-size: 14px; border-radius: 4px; color: white; }
+            QPushButton { background-color: #2e8b57; font-weight: bold; font-size: 14px; border-radius: 4px; color: white; border: none; }
             QPushButton:hover { background-color: #3cb371; }
             QPushButton:disabled { background-color: #444; color: #888; }
         """)
         self.btn_start.clicked.connect(self.start_execution)
 
         btn_layout = QHBoxLayout()
-        self.btn_save = QPushButton("Save")
+        self.btn_save = QPushButton("Save Session")
         self.btn_save.clicked.connect(self.save_experiment)
-        self.btn_load = QPushButton("Load")
+        self.btn_save.setStyleSheet(
+            "background: #333; color: white; border: 1px solid #444; padding: 5px; border-radius: 4px;")
+
+        self.btn_load = QPushButton("Load Session")
         self.btn_load.clicked.connect(self.load_experiment)
+        self.btn_load.setStyleSheet(
+            "background: #333; color: white; border: 1px solid #444; padding: 5px; border-radius: 4px;")
+
         btn_layout.addWidget(self.btn_save)
         btn_layout.addWidget(self.btn_load)
 
@@ -410,8 +300,8 @@ class ExperimentTab(QWidget):
         # Tabs for plots
         self.image_tabs = QTabWidget()
         self.image_tabs.setStyleSheet("""
-            QTabWidget::pane { border: 1px solid #444; background: #1e1e1e; }
-            QTabBar::tab { background: #333; color: #aaa; padding: 8px 20px; }
+            QTabWidget::pane { border: 1px solid #333; background: #1a1a1a; }
+            QTabBar::tab { background: #252525; color: #888; padding: 8px 20px; }
             QTabBar::tab:selected { background: #2e8b57; color: white; }
         """)
 
@@ -437,11 +327,11 @@ class ExperimentTab(QWidget):
 
         console_header = QHBoxLayout()
         console_label = QLabel("SYSTEM LOGS")
-        console_label.setStyleSheet("font-size: 11px; font-weight: bold; color: #666;")
+        console_label.setStyleSheet("font-size: 11px; font-weight: bold; color: #555;")
         btn_clear = QPushButton("Clear")
         btn_clear.setFixedSize(60, 20)
         btn_clear.clicked.connect(lambda: self.console.clear())
-        btn_clear.setStyleSheet("font-size: 10px; background: #333; border: none; color: white;")
+        btn_clear.setStyleSheet("font-size: 10px; background: #333; border: none; color: white; border-radius: 2px;")
 
         console_header.addWidget(console_label)
         console_header.addStretch()
@@ -450,7 +340,7 @@ class ExperimentTab(QWidget):
         self.console = QTextEdit()
         self.console.setReadOnly(True)
         self.console.setFont(QFont("Consolas", 10))
-        self.console.setStyleSheet("background-color: #0c0c0c; color: #00ff00; border: 1px solid #333;")
+        self.console.setStyleSheet("background-color: #0f0f0f; color: #00e676; border: 1px solid #333;")
 
         self.lbl_progress_details = QLabel("Ready to initialize.")
         self.lbl_progress_details.setStyleSheet("color: #aaa; font-style: italic;")
@@ -474,8 +364,7 @@ class ExperimentTab(QWidget):
         main_layout.addWidget(right_splitter)
 
     def handle_train_toggle(self, checked):
-        # Optional: Disable manual backtest selection if training is selected
-        # (Assuming training implies auto-backtest)
+        # Disable manual backtest selection if training is selected (auto flow)
         self.cb_bt_val.setDisabled(checked)
         self.cb_bt_test.setDisabled(checked)
         if checked:
@@ -488,7 +377,6 @@ class ExperimentTab(QWidget):
             QMessageBox.warning(self, "Input Error", "Please provide a Title for this experiment.")
             return
 
-        # Disable button to prevent double run
         self.btn_start.setEnabled(False)
         self.btn_start.setText("RUNNING...")
 
@@ -500,7 +388,6 @@ class ExperimentTab(QWidget):
         self.progress_bar.setValue(0)
         self.console.append(f"Loaded Settings: {json.dumps(hyperparams, indent=2)}")
 
-        # Match the config structure expected by your workers.py
         config = {
             'flags': {
                 'update_data': self.cb_update.isChecked(),
@@ -522,7 +409,6 @@ class ExperimentTab(QWidget):
 
     def append_log(self, text):
         self.console.append(text)
-        # Auto scroll to bottom
         sb = self.console.verticalScrollBar()
         sb.setValue(sb.maximum())
 
@@ -546,7 +432,7 @@ class ExperimentTab(QWidget):
 
         lbl_img = QLabel()
         pixmap = QPixmap(image_path)
-        # Intelligent scaling
+        # Resize safely
         scaled_pixmap = pixmap.scaled(QSize(800, 500), Qt.AspectRatioMode.KeepAspectRatio,
                                       Qt.TransformationMode.SmoothTransformation)
         lbl_img.setPixmap(scaled_pixmap)
@@ -640,62 +526,38 @@ class ExperimentTab(QWidget):
             QMessageBox.critical(self, "Load Error", str(e))
 
 
-# --- 5. MAIN CONTROLLER ---
+# --- 4. MAIN WINDOW (Simplified) ---
 class TradingDashboard(QMainWindow):
     def __init__(self, save_dir):
         super().__init__()
-        # Set Global Save Dir
         global DEFAULT_SAVE_DIR
         DEFAULT_SAVE_DIR = save_dir
 
         self.setWindowTitle("CatRL - Algorithmic Trading Environment")
         self.resize(1400, 900)
 
-        # Set App Icon if available (optional)
-        # self.setWindowIcon(QIcon("path/to/icon.png"))
+        # Set Window Icon explicitly
+        if os.path.exists("icon.ico"):
+            self.setWindowIcon(QIcon("icon.ico"))
 
-        self.stacked_widget = QStackedWidget()
-
-        self.home_screen = HomeScreen(switch_callback=self.go_to_dashboard)
-        self.dashboard_content = self.create_dashboard_content()
-
-        self.stacked_widget.addWidget(self.home_screen)  # Index 0
-        self.stacked_widget.addWidget(self.dashboard_content)  # Index 1
-
-        self.setCentralWidget(self.stacked_widget)
-
-    def create_dashboard_content(self):
-        tabs = QTabWidget()
-        tabs.setStyleSheet("""
+        # Initialize Tabs directly (No Stacked Widget needed)
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet("""
             QTabWidget::pane { border-top: 2px solid #2e8b57; }
-            QTabBar::tab {
-                background: #252525;
-                color: #aaa;
-                min-width: 120px;
-                padding: 10px;
-                font-weight: bold;
-                border-top-left-radius: 4px;
-                border-top-right-radius: 4px;
-            }
-            QTabBar::tab:selected {
-                background: #2e8b57;
-                color: white;
-            }
-            QTabBar::tab:hover {
-                background: #333;
-            }
+            QTabBar::tab { background: #252525; color: #aaa; padding: 10px 20px; font-weight: bold; }
+            QTabBar::tab:selected { background: #2e8b57; color: white; }
         """)
 
         self.trade_tab = TradeTab()
         self.settings_tab = SettingsTab()
         self.experiment_tab = ExperimentTab(self.settings_tab)
 
-        tabs.addTab(self.trade_tab, "Live Trade")
-        tabs.addTab(self.experiment_tab, "Experiment Lab")
-        tabs.addTab(self.settings_tab, "Settings")
+        self.tabs.addTab(self.trade_tab, "Live Trade")
+        self.tabs.addTab(self.experiment_tab, "Experiment Lab")
+        self.tabs.addTab(self.settings_tab, "Settings")
 
-        tabs.setCurrentIndex(1)  # Default to Experiment
-        return tabs
+        # Set Tabs as Central Widget
+        self.setCentralWidget(self.tabs)
 
-    def go_to_dashboard(self):
-        self.stacked_widget.setCurrentIndex(1)
+        # Start at Experiment Tab (index 1) or Live Trade (index 0)
+        self.tabs.setCurrentIndex(1)
