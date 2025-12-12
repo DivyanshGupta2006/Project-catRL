@@ -16,7 +16,7 @@ def backtest_step(data, equity_curve, state, portfolio):
     state = calculate_metrics.calculate_candle_metrics(candle, state, portfolio)
     candle = predict_position.predict(candle)
     Pt = portfolio_calculator.calculate(candle, state, portfolio)
-    if Pt < 0:
+    if Pt < (0.001 * config['strategy']['capital']):
         print("Bankruptcy!")
         return 0
     equity_curve.append(Pt)
@@ -67,5 +67,11 @@ def backtest_on_val():
 def backtest_on_test():
     true_data = read_file.read_merged_test_data(False)
     field_of_view = read_file.read_merged_test_data(True)
+    predict_position.assign_field_of_view(field_of_view)
+    backtest(true_data, label='test')
+
+def backtest_on_train():
+    true_data = read_file.read_merged_training_data(False)
+    field_of_view = read_file.read_merged_training_data(True)
     predict_position.assign_field_of_view(field_of_view)
     backtest(true_data, label='test')
