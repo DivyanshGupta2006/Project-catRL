@@ -12,12 +12,14 @@ class Environment:
     def __init__(self,
                  data,
                  bound_reward_factor,
+                 bankrupt_factor,
                  seq_len,
                  capital,
                  symbols,
                  results_path):
         self.data = data
         self.bound_reward_factor = bound_reward_factor
+        self.bankrupt_factor = bankrupt_factor
         self.seq_len = seq_len
         self.capital = capital
         self.symbols = symbols
@@ -83,7 +85,7 @@ class Environment:
 
         new_portfolio = portfolio_calculator.calculate(candle, state, portfolio)
         self.equity.append(new_portfolio)
-        if(new_portfolio < 0.001 * self.capital):
+        if(new_portfolio < self.bankrupt_factor * self.capital):
             done = 1
         else:
             done = 0

@@ -37,6 +37,7 @@ BOUND_REWARD_FACTOR = hp['bound_reward_factor']
 
 SYMBOLS = config['data']['symbols']
 CAPITAL = config['strategy']['capital']
+BANKRUPT_FRACTION = config['strategy']['bankrupt_fraction']
 MODEL_PATH = get_absolute_path.absolute(config['paths']['model_directory'] + "model.pth")
 RESULTS_PATH = get_absolute_path.absolute(config['paths']['report_directory'])  / 'equity_charts/'
 
@@ -67,6 +68,7 @@ def train():
     print(f'Bound reward: {BOUND_REWARD_FACTOR}')
     print(f'Symbols: {SYMBOLS}')
     print(f'Capital: {CAPITAL}')
+    print(f'Bankrupt fraction: {BANKRUPT_FRACTION}')
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
@@ -104,6 +106,7 @@ def train():
 
     env = Environment(data=train_data_unnorm,
                       bound_reward_factor=BOUND_REWARD_FACTOR,
+                      bankrupt_factor=BANKRUPT_FRACTION,
                       seq_len=SEQUENCE_LENGTH,
                       capital=CAPITAL,
                       symbols=SYMBOLS,

@@ -18,6 +18,7 @@ def start():
         backtest_strategy.backtest_on_test()
 
     else:
+
         choice = input("Would you like to backtest the strategy on validation set? (y/n): ")
         if choice.lower() == 'y':
             from src.backtester import backtest_strategy
@@ -27,3 +28,8 @@ def start():
         if choice.lower() == 'y':
             from src.backtester import backtest_strategy
             backtest_strategy.backtest_on_test()
+
+        choice = input("Would you like to backtest the strategy on train set? (y/n): ")
+        if choice.lower() == 'y':
+            from src.backtester import backtest_strategy
+            backtest_strategy.backtest_on_train()
