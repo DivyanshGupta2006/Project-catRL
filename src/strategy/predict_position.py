@@ -172,4 +172,5 @@ def assign_field_of_view(field_of_view):
                           device)
 
 def predict(candle):
+    global predictor
     return predictor.assign_prediction(candle)
