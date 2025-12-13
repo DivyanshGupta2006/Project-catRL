@@ -1,4 +1,7 @@
 import torch
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from src.backtester import place_order, execute_order, calculate_metrics, execute_SL_TP
@@ -28,7 +31,7 @@ class Environment:
         for idx, symbol in enumerate(self.symbols):
             self.symbols[idx] = symbol.split('/')[0]
 
-        self.current_step = 10 * self.seq_len
+        self.current_step = self.seq_len
         self.prev_portfolio = self.capital
         self.equity = []
         self.reset_counter = 0
@@ -109,7 +112,7 @@ class Environment:
     def reset(self, field_of_view, to_plot=False):
         update_state.set_state(self.capital)
         update_portfolio.set_portfolio()
-        # self.current_step = self.seq_len
+        # self.current_step = 15 * self.seq_len
         self.prev_portfolio = self.capital
         if to_plot:
             plt.plot(self.equity)

@@ -1,4 +1,7 @@
 from tqdm import tqdm
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 from src.backtester import data_handler, place_order, execute_order, execute_SL_TP, print_backtesting_results, calculate_metrics
@@ -16,7 +19,7 @@ def backtest_step(data, equity_curve, state, portfolio):
     state = calculate_metrics.calculate_candle_metrics(candle, state, portfolio)
     candle = predict_position.predict(candle)
     Pt = portfolio_calculator.calculate(candle, state, portfolio)
-    if Pt < (config['startegy']['bankrupt_fraction'] * config['startegy']['capital']):
+    if Pt < (config['strategy']['bankrupt_fraction'] * config['strategy']['capital']):
         print("Bankruptcy!")
         return 0
     equity_curve.append(Pt)
