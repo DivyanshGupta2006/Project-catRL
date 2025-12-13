@@ -1,8 +1,15 @@
 import torch
 import torch.nn as nn
+import numpy as np
 from torch.distributions import Normal
 
+def layer_init(layer, std=np.sqrt(2), bias_const=0.0):
+    torch.nn.init.orthogonal_(layer.weight, std)
+    torch.nn.init.constant_(layer.bias, bias_const)
+    return layer
+
 class Model(nn.Module):
+
     def __init__(self,
                  n_assets,
                  input_dim,
@@ -28,24 +35,24 @@ class Model(nn.Module):
         layers = []
         num_layers = len(self.actor_hidden_dim) - 1
 
-        layers.append(nn.Linear(self.lstm_hidden_dim, self.actor_hidden_dim[0]))
+        layers.append(layer_init(nn.Linear(self.lstm_hidden_dim, self.actor_hidden_dim[0])))
         layers.append(nn.ReLU())
         for i in range(num_layers):
-            layers.append(nn.Linear(self.actor_hidden_dim[i], self.actor_hidden_dim[i + 1]))
+            layers.append(layer_init(nn.Linear(self.actor_hidden_dim[i], self.actor_hidden_dim[i + 1])))
             layers.append(nn.ReLU())
-        layers.append(nn.Linear(self.actor_hidden_dim[-1], 2 * self.n_assets))
+        layers.append(layer_init(nn.Linear(self.actor_hidden_dim[-1], 2 * self.n_assets)))
 
         self.actor_head = nn.Sequential(*layers)
 
         layers = []
         num_layers = len(self.critic_hidden_dim) - 1
 
-        layers.append(nn.Linear(self.lstm_hidden_dim, self.critic_hidden_dim[0]))
+        layers.append(layer_init(nn.Linear(self.lstm_hidden_dim, self.critic_hidden_dim[0])))
         layers.append(nn.ReLU())
         for i in range(num_layers):
-            layers.append(nn.Linear(self.critic_hidden_dim[i], self.critic_hidden_dim[i + 1]))
+            layers.append(layer_init(nn.Linear(self.critic_hidden_dim[i], self.critic_hidden_dim[i + 1])))
             layers.append(nn.ReLU())
-        layers.append(nn.Linear(self.critic_hidden_dim[-1], 1))
+        layers.append(layer_init(nn.Linear(self.critic_hidden_dim[-1], 1)))
 
         self.critic_head = nn.Sequential(*layers)
 
