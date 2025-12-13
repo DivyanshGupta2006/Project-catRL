@@ -1,6 +1,8 @@
 import torch
 from tqdm import tqdm
 import gc
+import random
+import numpy as np
 
 from src.strategy.model import Model
 from src.strategy.agent import Agent
@@ -13,6 +15,7 @@ config = get_config.read_yaml()
 # load hyperparameters
 hp = config['hyperparameters']
 
+seed = hp['model_seed']
 NUM_ASSETS = hp['num_assets']
 INPUT_DIM = hp['input_dim']
 ACTION_DIM = hp['action_dim']
@@ -47,6 +50,7 @@ check_dir.check(get_absolute_path.absolute(config['paths']['report_directory'] +
 def train():
     print('Starting Training...')
 
+    print(f'Model Seed: {seed}')
     print(f'Number of assets: {NUM_ASSETS}')
     print(f'Input dim: {INPUT_DIM}')
     print(f'Action dim: {ACTION_DIM}')
@@ -84,6 +88,13 @@ def train():
                          inplace=True)
 
     print('Instantiating entities...')
+
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    np,random.seed(seed)
+    random.seed(seed)
 
     model = Model(n_assets=NUM_ASSETS,
                   input_dim=INPUT_DIM,

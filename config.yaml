@@ -54,6 +54,7 @@ strategy:
   bankrupt_fraction: 0.001
 
 hyperparameters:
+  model_seed: 42
   num_assets: 10
   input_dim: 126
   action_dim: 10
@@ -70,7 +71,7 @@ hyperparameters:
   clip_epsilon: 0.2
   value_loss_coef: 0.5
   entropy_loss_coef: 0.1
-  seq_len: 96
+  seq_len: 108
   mini_batch_size: 16
   rollout_size: 256
   num_rollouts: 10
